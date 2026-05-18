@@ -1,0 +1,13 @@
+echo 'PS1="\[\033[1;32m\]typer$ \[\033[0m\]"' >> ~/.bashrc
+source ~/.bashrc
+
+
+
+U = Untracked   → Git has never seen this file before
+                  you haven't done git add on it yet
+
+M = Modified    → Git knows this file but it has been
+                  changed since the last commit
+
+
+
