@@ -1,5 +1,10 @@
+path syle:
 echo 'PS1="\[\033[1;32m\]typer$ \[\033[0m\]"' >> ~/.bashrc
 source ~/.bashrc
+
+
+search:
+find . -not -path '*/\.*' -not -path '*/bin/*' -not -path '*/obj/*'
 
 
 
