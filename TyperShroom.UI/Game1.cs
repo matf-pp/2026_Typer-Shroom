@@ -13,6 +13,8 @@ public class Game1 : Game
 
     private IGameEngine _engine;
 
+    private Texture2D _background;
+
     public Game1()
     {
         // Initialize GPU and window
@@ -36,6 +38,8 @@ public class Game1 : Game
     {
         //
         _spriteBatch = new SpriteBatch(GraphicsDevice);
+
+        _background = Content.Load<Texture2D>("images/background");
     }
 
     protected override void Update(GameTime gameTime)
@@ -58,20 +62,30 @@ public class Game1 : Game
         // Clears last frame
         GraphicsDevice.Clear(Color.Black);
 
-        var state = _engine.CurrentState;
+        // var state = _engine.CurrentState;
 
-        // Start render
+        // Begin the sprite batch to prepare for rendering
         _spriteBatch?.Begin();
 
-        /*
-         *
-         * RENDER
-         *
-        */
+        // Draw the texture at the center of the window
+        _spriteBatch?.Draw(
+            _background,                // texture
+            new Vector2(                // position
+                Window.ClientBounds.Width,
+                Window.ClientBounds.Height) * 0.5f,
+            null,                       // sourceRectangle
+            Color.White,                // color (tint, .White = no tint)
+            0.0f,                       // rotation
+            new Vector2(                // origin
+                _background.Width,
+                _background.Height) * 0.5f,
+            1.0f,                       // scale
+            SpriteEffects.None,         // effects
+            0.0f                        // layerDepth
+        );
 
-        // End render
         _spriteBatch?.End();
 
-
+        base.Draw(gameTime);
     }
 }

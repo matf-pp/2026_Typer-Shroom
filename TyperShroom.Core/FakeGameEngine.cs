@@ -5,7 +5,7 @@ namespace TyperShroom.Core {
 
     public class FakeGameEngine : IGameEngine {
         public GameState CurrentState => new GameState {
-            Lives = 3,
+            Lives = 2,
             Score = 120,
             Wave = 2,
             CurrentInput = "spi",
