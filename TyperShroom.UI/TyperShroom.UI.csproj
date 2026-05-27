@@ -7,4 +7,20 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TyperShroom.Core\TyperShroom.Core.csproj" />
+  </ItemGroup>
+
+<Target Name="BuildContent" BeforeTargets="Build">
+  <Exec Command="mgcb Content/Content.mgcb" />
+  <ItemGroup>
+    <XnbFiles Include="Content/bin/Content/**/*.xnb" />
+  </ItemGroup>
+  <Copy SourceFiles="@(XnbFiles)" DestinationFiles="@(XnbFiles->'$(OutputPath)/Content/%(RecursiveDir)%(Filename)%(Extension)')" />
+</Target>
+
 </Project>
