@@ -21,9 +21,14 @@ namespace TyperShroom.UI.Screens
             _height = height;
         }
 
-        public void Update(KeyboardState keyboard)
+        public void Reset()
         {
-            if(keyboard.IsKeyDown(Keys.Enter))
+            StartGame = false;
+        }
+
+        public void Update(KeyboardState keyboard, KeyboardState previous)
+        {
+            if (keyboard.IsKeyDown(Keys.Enter) && !previous.IsKeyDown(Keys.Enter))
                 StartGame = true;
         }
 

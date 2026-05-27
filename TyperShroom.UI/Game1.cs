@@ -21,6 +21,14 @@ public class Game1 : Game
     private bool _gameStarted = false;
 
     private SpriteFont? _font;
+
+    private enum Screen { MainMenu, Game, Result }
+
+    private Screen _currentScreen = Screen.MainMenu;
+    private ResultScreen? _resultScreen;
+    private GameResult? _lastResult;
+
+    private KeyboardState _previousKeyboard;
     public Game1()
     {
         // Initialize GPU and window
@@ -59,6 +67,12 @@ public class Game1 : Game
             _graphics.PreferredBackBufferWidth,
             _graphics.PreferredBackBufferHeight
         );
+
+        _resultScreen = new ResultScreen(
+            _font,
+            _graphics.PreferredBackBufferWidth,
+            _graphics.PreferredBackBufferHeight
+        );
     }
 
     protected override void Update(GameTime gameTime)
@@ -75,18 +89,48 @@ public class Game1 : Game
                 _engine.ProcessKeystroke((char)('a' + (key - Keys.A)));
             }
         }
+        
+        if(keyboard.IsKeyDown(Keys.G))
+        {
+            _lastResult = _engine.EndGame();
+            _currentScreen = Screen.Result;
+        }
 
         _engine.Update(gameTime.ElapsedGameTime.TotalSeconds);
 
         base.Update(gameTime);
 
-        if(!_gameStarted)
+        // if(!_gameStarted)
+        // {
+        //     _mainMenu?.Update(keyboard);
+        //     if(_mainMenu?.StartGame == true)
+        //         _gameStarted = true;
+        //     return;
+        // } 
+
+        if (_currentScreen == Screen.MainMenu)
         {
-            _mainMenu?.Update(keyboard);
-            if(_mainMenu?.StartGame == true)
-                _gameStarted = true;
+            _mainMenu?.Update(keyboard, _previousKeyboard);
+            if (_mainMenu?.StartGame == true)
+                _currentScreen = Screen.Game;
+            _previousKeyboard = keyboard;
             return;
-        } 
+        }
+
+        if (_currentScreen == Screen.Result)
+        {
+            _resultScreen?.Update(keyboard, _previousKeyboard);
+            if (_resultScreen?.ReturnToMenu == true)
+            {
+                _currentScreen = Screen.MainMenu;
+                _mainMenu?.Reset();
+                _resultScreen.Reset();
+            }
+            _previousKeyboard = keyboard;
+            return;
+        }
+
+        _previousKeyboard = keyboard;
     }
 
     protected override void Draw(GameTime gameTime)
@@ -94,10 +138,26 @@ public class Game1 : Game
         // Clears last frame
         GraphicsDevice.Clear(Color.Black);
 
-        if(!_gameStarted)
+        // if(!_gameStarted)
+        // {
+        //     _spriteBatch?.Begin();
+        //     _mainMenu?.Draw(_spriteBatch!);
+        //     _spriteBatch?.End();
+        //     return;
+        // }
+
+        if (_currentScreen == Screen.MainMenu)
         {
             _spriteBatch?.Begin();
             _mainMenu?.Draw(_spriteBatch!);
+            _spriteBatch?.End();
+            return;
+        }
+
+        if (_currentScreen == Screen.Result)
+        {
+            _spriteBatch?.Begin();
+            _resultScreen?.Draw(_spriteBatch!, _lastResult!);
             _spriteBatch?.End();
             return;
         }
