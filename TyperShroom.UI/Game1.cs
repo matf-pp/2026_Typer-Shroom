@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using TyperShroom.Core;
 using Vector2 = Microsoft.Xna.Framework.Vector2;
+using TyperShroom.UI.Screens;
 public class Game1 : Game
 {
     // Window creation, resolution, fullscreen
@@ -14,14 +15,20 @@ public class Game1 : Game
 
     private IGameEngine _engine;
 
-    private Texture2D _background;
-    private Texture2D _mushroom;
-    private Texture2D _spider;
-    private Texture2D _beetle;
-    private Texture2D _ant;
+    private Texture2D _background, _mushroom, _spider, _beetle, _ant;
 
+    private MainMenu? _mainMenu;
+    private bool _gameStarted = false;
 
     private SpriteFont? _font;
+
+    private enum Screen { MainMenu, Game, Result }
+
+    private Screen _currentScreen = Screen.MainMenu;
+    private ResultScreen? _resultScreen;
+    private GameResult? _lastResult;
+
+    private KeyboardState _previousKeyboard;
     public Game1()
     {
         // Initialize GPU and window
@@ -54,6 +61,18 @@ public class Game1 : Game
 
         
         _font = Content.Load<SpriteFont>("DefaultFont");
+
+        _mainMenu = new MainMenu(
+            _font,
+            _graphics.PreferredBackBufferWidth,
+            _graphics.PreferredBackBufferHeight
+        );
+
+        _resultScreen = new ResultScreen(
+            _font,
+            _graphics.PreferredBackBufferWidth,
+            _graphics.PreferredBackBufferHeight
+        );
     }
 
     protected override void Update(GameTime gameTime)
@@ -70,10 +89,48 @@ public class Game1 : Game
                 _engine.ProcessKeystroke((char)('a' + (key - Keys.A)));
             }
         }
+        
+        if(keyboard.IsKeyDown(Keys.G))
+        {
+            _lastResult = _engine.EndGame();
+            _currentScreen = Screen.Result;
+        }
 
         _engine.Update(gameTime.ElapsedGameTime.TotalSeconds);
 
-        base.Update(gameTime);    
+        base.Update(gameTime);
+
+        // if(!_gameStarted)
+        // {
+        //     _mainMenu?.Update(keyboard);
+        //     if(_mainMenu?.StartGame == true)
+        //         _gameStarted = true;
+        //     return;
+        // } 
+
+        if (_currentScreen == Screen.MainMenu)
+        {
+            _mainMenu?.Update(keyboard, _previousKeyboard);
+            if (_mainMenu?.StartGame == true)
+                _currentScreen = Screen.Game;
+            _previousKeyboard = keyboard;
+            return;
+        }
+
+        if (_currentScreen == Screen.Result)
+        {
+            _resultScreen?.Update(keyboard, _previousKeyboard);
+            if (_resultScreen?.ReturnToMenu == true)
+            {
+                _currentScreen = Screen.MainMenu;
+                _mainMenu?.Reset();
+                _resultScreen.Reset();
+            }
+            _previousKeyboard = keyboard;
+            return;
+        }
+
+        _previousKeyboard = keyboard;
     }
 
     protected override void Draw(GameTime gameTime)
@@ -81,12 +138,37 @@ public class Game1 : Game
         // Clears last frame
         GraphicsDevice.Clear(Color.Black);
 
+        // if(!_gameStarted)
+        // {
+        //     _spriteBatch?.Begin();
+        //     _mainMenu?.Draw(_spriteBatch!);
+        //     _spriteBatch?.End();
+        //     return;
+        // }
+
+        if (_currentScreen == Screen.MainMenu)
+        {
+            _spriteBatch?.Begin();
+            _mainMenu?.Draw(_spriteBatch!);
+            _spriteBatch?.End();
+            return;
+        }
+
+        if (_currentScreen == Screen.Result)
+        {
+            _spriteBatch?.Begin();
+            _resultScreen?.Draw(_spriteBatch!, _lastResult!);
+            _spriteBatch?.End();
+            return;
+        }
+
+        var state = _engine.CurrentState;
+        int width  = GraphicsDevice.Viewport.Width;
+        int height = GraphicsDevice.Viewport.Height;
+
 
         // Begin the sprite batch to prepare for rendering
         _spriteBatch?.Begin();
-
-        int width  = GraphicsDevice.Viewport.Width;
-        int height = GraphicsDevice.Viewport.Height;
 
         // Draw the texture at the center of the window
         _spriteBatch?.Draw(
@@ -119,7 +201,6 @@ public class Game1 : Game
             0f
         );
 
-        var state = _engine.CurrentState;
 
         // HUD
         _spriteBatch?.DrawString(
