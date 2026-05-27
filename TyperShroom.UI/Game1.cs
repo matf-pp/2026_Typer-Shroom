@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using TyperShroom.Core;
 using Vector2 = Microsoft.Xna.Framework.Vector2;
+using TyperShroom.UI.Screens;
 public class Game1 : Game
 {
     // Window creation, resolution, fullscreen
@@ -14,12 +15,10 @@ public class Game1 : Game
 
     private IGameEngine _engine;
 
-    private Texture2D _background;
-    private Texture2D _mushroom;
-    private Texture2D _spider;
-    private Texture2D _beetle;
-    private Texture2D _ant;
+    private Texture2D _background, _mushroom, _spider, _beetle, _ant;
 
+    private MainMenu? _mainMenu;
+    private bool _gameStarted = false;
 
     private SpriteFont? _font;
     public Game1()
@@ -54,6 +53,12 @@ public class Game1 : Game
 
         
         _font = Content.Load<SpriteFont>("DefaultFont");
+
+        _mainMenu = new MainMenu(
+            _font,
+            _graphics.PreferredBackBufferWidth,
+            _graphics.PreferredBackBufferHeight
+        );
     }
 
     protected override void Update(GameTime gameTime)
@@ -73,7 +78,15 @@ public class Game1 : Game
 
         _engine.Update(gameTime.ElapsedGameTime.TotalSeconds);
 
-        base.Update(gameTime);    
+        base.Update(gameTime);
+
+        if(!_gameStarted)
+        {
+            _mainMenu?.Update(keyboard);
+            if(_mainMenu?.StartGame == true)
+                _gameStarted = true;
+            return;
+        } 
     }
 
     protected override void Draw(GameTime gameTime)
@@ -81,12 +94,21 @@ public class Game1 : Game
         // Clears last frame
         GraphicsDevice.Clear(Color.Black);
 
+        if(!_gameStarted)
+        {
+            _spriteBatch?.Begin();
+            _mainMenu?.Draw(_spriteBatch!);
+            _spriteBatch?.End();
+            return;
+        }
+
+        var state = _engine.CurrentState;
+        int width  = GraphicsDevice.Viewport.Width;
+        int height = GraphicsDevice.Viewport.Height;
+
 
         // Begin the sprite batch to prepare for rendering
         _spriteBatch?.Begin();
-
-        int width  = GraphicsDevice.Viewport.Width;
-        int height = GraphicsDevice.Viewport.Height;
 
         // Draw the texture at the center of the window
         _spriteBatch?.Draw(
@@ -119,7 +141,6 @@ public class Game1 : Game
             0f
         );
 
-        var state = _engine.CurrentState;
 
         // HUD
         _spriteBatch?.DrawString(
