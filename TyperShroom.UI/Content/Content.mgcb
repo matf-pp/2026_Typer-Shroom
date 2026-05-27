@@ -3,7 +3,7 @@
 
 /outputDir:bin
 /intermediateDir:obj
-/platform:Linux
+/platform:DesktopGL
 /config:
 /profile:Reach
 /compress:False
@@ -12,6 +12,13 @@
 
 
 #---------------------------------- Content ---------------------------------#
+
+#begin DefaultFont.spritefont
+/importer:FontDescriptionImporter
+/processor:LocalizedFontProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:DefaultFont.spritefont
 
 #begin images/background.jpg
 /importer:TextureImporter
@@ -23,5 +30,5 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:images/background.jpg;images/background.jpg
+/build:images/background.jpg
 

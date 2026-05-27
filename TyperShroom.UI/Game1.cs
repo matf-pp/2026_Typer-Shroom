@@ -15,6 +15,8 @@ public class Game1 : Game
 
     private Texture2D _background;
 
+    private SpriteFont? _font;
+
     public Game1()
     {
         // Initialize GPU and window
@@ -40,6 +42,8 @@ public class Game1 : Game
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
         _background = Content.Load<Texture2D>("images/background");
+
+        _font = Content.Load<SpriteFont>("DefaultFont");
     }
 
     protected override void Update(GameTime gameTime)
@@ -83,6 +87,26 @@ public class Game1 : Game
             SpriteEffects.None,         // effects
             0.0f                        // layerDepth
         );
+
+        var state = _engine.CurrentState;
+
+        _spriteBatch?.DrawString(
+                                 _font,                     // font
+                                 $"Lives: {state.Lives}   Score: {state.Score}   Wave:  {state.Wave}",
+                                  new Vector2(10, 10),      // pos
+                                  Color.White               // color
+                                );
+
+        foreach (var bug in state.ActiveBugs)
+        {
+            _spriteBatch?.DrawString(
+                                     _font,
+                                     bug.Word,
+                                     new Vector2(bug.PositionX * 5,
+                                                 bug.PositionY * 25),
+                                                 Color.Red
+                                    );
+        }
 
         _spriteBatch?.End();
 
