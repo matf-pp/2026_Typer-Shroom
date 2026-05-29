@@ -7,7 +7,7 @@ namespace TyperShroom.Core {
         public int Score            { get; set; }
         public int Wave             { get; set; }
         public string CurrentInput  { get; set; } = string.Empty;
-        public Bug? CurrentTarget    { get; set; } 
+        public Bug? CurrentTarget   { get; set; } 
         public bool IsGameOver      { get; set; }
     }
 }

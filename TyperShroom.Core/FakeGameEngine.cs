@@ -26,6 +26,9 @@ namespace TyperShroom.Core {
         public event Action<Bug>? OnBugSpawned;
         public event Action<Bug>? OnBugKilled;
         public event Action<Bug>? OnBugReached;
+        public event Action<Bug>? OnBugMistyped;
+        public event Action? OnWaveCleared;
+        public event Action? OnKeyNotMatched;
         public event Action? OnGameOver;
     }
 
