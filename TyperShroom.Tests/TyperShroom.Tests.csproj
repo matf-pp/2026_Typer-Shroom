@@ -1,15 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <ItemGroup>
+    <ProjectReference Include="..\TyperShroom.Core\TyperShroom.Core.csproj" />
+  </ItemGroup>
+
   <PropertyGroup>
+    <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="words.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+      <Content Include="..\TyperShroom.Core\words.txt" 
+  CopyToOutputDirectory="Always" />
   </ItemGroup>
 
 </Project>
