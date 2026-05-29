@@ -87,7 +87,6 @@ woe
 wow
 yew
 zip
-
 [medium]
 acorn
 adder
@@ -505,7 +504,6 @@ yield
 young
 youth
 zebra
-
 [hard]
 absolute
 abstract
