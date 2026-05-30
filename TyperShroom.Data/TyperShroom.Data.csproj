@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\TyperShroom.Core\TyperShroom.Core.csproj" />
+  </ItemGroup>
+
 </Project>
