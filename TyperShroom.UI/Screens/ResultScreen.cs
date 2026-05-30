@@ -43,9 +43,10 @@ namespace TyperShroom.UI.Screens
                 new Vector2(_width / 2f - titleSize.X / 2, _height * 0.2f),
                 Color.Red
             );
-            spriteBatch.DrawString(_font, $"Score: {result.FinalScore}", new Vector2(_width / 2f - 100, _height * 0.4f), Color.White);
-            spriteBatch.DrawString(_font, $"WPM: {result.WPM}", new Vector2(_width / 2f - 100, _height * 0.5f), Color.White);
-            spriteBatch.DrawString(_font, $"Accuracy: {result.Accuracy:P0}", new Vector2(_width / 2f - 100, _height * 0.6f), Color.White);
+            spriteBatch.DrawString(_font, $"Score: {result.FinalScore}", new Vector2(_width / 2f - 100, _height * 0.38f), Color.White);
+            spriteBatch.DrawString(_font, $"Wave reached: {result.WavesReached}", new Vector2(_width / 2f - 100, _height * 0.46f), Color.White);
+            spriteBatch.DrawString(_font, $"WPM: {result.WPM}", new Vector2(_width / 2f - 100, _height * 0.54f), Color.White);
+            spriteBatch.DrawString(_font, $"Accuracy: {result.Accuracy:P0}", new Vector2(_width / 2f - 100, _height * 0.62f), Color.White);
         
             string back = "Press ENTER to return to menu";
             Vector2 backSize = _font.MeasureString(back);

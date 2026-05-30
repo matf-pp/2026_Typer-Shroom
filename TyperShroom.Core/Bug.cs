@@ -3,7 +3,7 @@ namespace TyperShroom.Core {
         public string BugType       { get; set; } = string.Empty;
         public string Word          { get; set; } = string.Empty;
         public string RemainingWord { get; set; } = string.Empty;
-        public int PositionX        { get; set; }
+        public double PositionX     { get; set; }
         public int PositionY        { get; set; }
         public double Speed         { get; set; }
         public bool IsDead          { get; set; }

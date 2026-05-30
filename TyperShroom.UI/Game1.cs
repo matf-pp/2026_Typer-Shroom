@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Input;
 using TyperShroom.Core;
 using Vector2 = Microsoft.Xna.Framework.Vector2;
 using TyperShroom.UI.Screens;
+
 public class Game1 : Game
 {
     // Window creation, resolution, fullscreen
@@ -39,7 +40,7 @@ public class Game1 : Game
 
         IsMouseVisible = true;
 
-        _engine = new FakeGameEngine();
+        _engine = new GameEngine();
     }
 
     protected override void Initialize()
@@ -84,17 +85,19 @@ public class Game1 : Game
 
         foreach (Keys key in keyboard.GetPressedKeys())
         {
-            if (key >= Keys.A && key <= Keys.Z)
+            // if the key is down now AND was already down last frame, skip it. Only
+            // Only process it if it's new.
+            if (key >= Keys.A && key <= Keys.Z && !_previousKeyboard.IsKeyDown(key))
             {
                 _engine.ProcessKeystroke((char)('a' + (key - Keys.A)));
             }
         }
         
-        if(keyboard.IsKeyDown(Keys.G))
-        {
-            _lastResult = _engine.EndGame();
-            _currentScreen = Screen.Result;
-        }
+        // if(keyboard.IsKeyDown(Keys.G))
+        // {
+        //     _lastResult = _engine.EndGame();
+        //     _currentScreen = Screen.Result;
+        // }
 
         _engine.Update(gameTime.ElapsedGameTime.TotalSeconds);
 
@@ -111,10 +114,22 @@ public class Game1 : Game
         if (_currentScreen == Screen.MainMenu)
         {
             _mainMenu?.Update(keyboard, _previousKeyboard);
-            if (_mainMenu?.StartGame == true)
+            if (_mainMenu?.StartGame == true) 
+            {
                 _currentScreen = Screen.Game;
+                _engine.StartGame();
+            }
             _previousKeyboard = keyboard;
             return;
+        }
+
+        if (_currentScreen == Screen.Game)
+        {
+            if (_engine.CurrentState.IsGameOver)
+            {
+                _lastResult = _engine.EndGame();
+                _currentScreen = Screen.Result;   
+            }
         }
 
         if (_currentScreen == Screen.Result)
@@ -217,7 +232,7 @@ public class Game1 : Game
             string typed = bug.Word.Substring(0, bug.Word.Length - bug.RemainingWord.Length);
             string remaining = bug.RemainingWord;
 
-            Vector2 pos = new Vector2(bug.PositionX / 100f * width, bug.PositionY / 100f * height);
+            Vector2 pos = new Vector2((float)bug.PositionX / 100f * width, bug.PositionY / 100f * height);
             Vector2 typedSize = _font.MeasureString(typed);
             
             Texture2D? bugTexture = bug.BugType switch
@@ -253,7 +268,10 @@ public class Game1 : Game
         }
 
         // input
-        string input = $"Input: {state.CurrentInput}";
+        string input = "Target: None";
+        if (state.CurrentTarget != null)
+            input = $"Target: {state.CurrentTarget.Word}";
+
         Vector2 size = _font.MeasureString(input);
         _spriteBatch?.DrawString(
                                  _font,

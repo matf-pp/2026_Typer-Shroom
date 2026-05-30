@@ -5,6 +5,9 @@ public class WordManager {
     List<string> easyWords = new List<string>();
     List<string> mediumWords = new List<string>();
     List<string> hardWords = new List<string>();
+    int _easyIndex = 0;
+    int _mediumIndex = 0;
+    int _hardIndex = 0;
 
     private void Shuffle(List<string> list) {
         Random rng = new Random();
@@ -62,69 +65,82 @@ public class WordManager {
 
         // waves (1 - 2)
         if (currentWave <= 2) {
-            foreach (string word in easyWords) {
-                if (!firstLettersOnScreen.Contains(word[0]) && !activeWords.Contains(word)) {
-                    easyWords.Remove(word);
-                    return word;
+            for (int i = _easyIndex; i < easyWords.Count; i++) {
+                if (!firstLettersOnScreen.Contains(easyWords[i][0]) && !activeWords.Contains(easyWords[i])) {
+                    _easyIndex = i + 1;
+                    if (_easyIndex >= easyWords.Count) {
+                        Shuffle(easyWords);
+                        _easyIndex = 0;
+                    }
+                    return easyWords[i];
                 }
             }
         }
         // waves (3 - 4)
         else if (currentWave >= 3 && currentWave <= 4) {
-            // make it 50-50 chance for choosing word difficulty
             Random rng = new Random();
-            List<string>[] lists;
-            if (rng.Next(2) == 0)
-                lists = new[] { easyWords, mediumWords };
-            else
-                lists = new[] { mediumWords, easyWords };
+            bool easyFirst = rng.Next(2) == 0;
+            List<string> primary = easyFirst ? easyWords : mediumWords;
+            List<string> secondary = easyFirst ? mediumWords : easyWords;
+            ref int primaryIndex = ref (easyFirst ? ref _easyIndex : ref _mediumIndex);
+            ref int secondaryIndex = ref (easyFirst ? ref _mediumIndex : ref _easyIndex);
 
-            
-            foreach (List<string> list in lists) {
-                foreach (string word in list) {
-                    if (!firstLettersOnScreen.Contains(word[0]) && !activeWords.Contains(word)){
-                        if (easyWords.Contains(word)) easyWords.Remove(word);
-                        else if (mediumWords.Contains(word)) mediumWords.Remove(word);
-                        return word;
-                    }
+            for (int i = primaryIndex; i < primary.Count; i++) {
+                if (!firstLettersOnScreen.Contains(primary[i][0]) && !activeWords.Contains(primary[i])) {
+                    primaryIndex = i + 1;
+                    if (primaryIndex >= primary.Count) { Shuffle(primary); primaryIndex = 0; }
+                    return primary[i];
+                }
+            }
+            for (int i = secondaryIndex; i < secondary.Count; i++) {
+                if (!firstLettersOnScreen.Contains(secondary[i][0]) && !activeWords.Contains(secondary[i])) {
+                    secondaryIndex = i + 1;
+                    if (secondaryIndex >= secondary.Count) { Shuffle(secondary); secondaryIndex = 0; }
+                    return secondary[i];
                 }
             }
         }
         // waves (5 - 6)
         else if (currentWave >= 5 && currentWave <= 6) {
-            foreach (string word in mediumWords) {
-                if (!firstLettersOnScreen.Contains(word[0]) && !activeWords.Contains(word)){
-                    mediumWords.Remove(word);
-                    return word;
+            for (int i = _mediumIndex; i < mediumWords.Count; i++) {
+                if (!firstLettersOnScreen.Contains(mediumWords[i][0]) && !activeWords.Contains(mediumWords[i])) {
+                    _mediumIndex = i + 1;
+                    if (_mediumIndex >= mediumWords.Count) { Shuffle(mediumWords); _mediumIndex = 0; }
+                    return mediumWords[i];
                 }
             }
         }
         // waves (7 - 8)
         else if (currentWave >= 7 && currentWave <= 8) {
-            // make it 50-50 chance for choosing word difficulty
             Random rng = new Random();
-            List<string>[] lists;
-            if (rng.Next(2) == 0)
-                lists = new[] { hardWords, mediumWords };
-            else
-                lists = new[] { mediumWords, hardWords };
+            bool hardFirst = rng.Next(2) == 0;
+            List<string> primary = hardFirst ? hardWords : mediumWords;
+            List<string> secondary = hardFirst ? mediumWords : hardWords;
+            ref int primaryIndex = ref (hardFirst ? ref _hardIndex : ref _mediumIndex);
+            ref int secondaryIndex = ref (hardFirst ? ref _mediumIndex : ref _hardIndex);
 
-            foreach (List<string> list in lists) {
-                foreach (string word in list) {
-                    if (!firstLettersOnScreen.Contains(word[0]) && !activeWords.Contains(word)){
-                        if (hardWords.Contains(word)) hardWords.Remove(word);
-                        else if (mediumWords.Contains(word)) mediumWords.Remove(word);
-                        return word;
-                    }
+            for (int i = primaryIndex; i < primary.Count; i++) {
+                if (!firstLettersOnScreen.Contains(primary[i][0]) && !activeWords.Contains(primary[i])) {
+                    primaryIndex = i + 1;
+                    if (primaryIndex >= primary.Count) { Shuffle(primary); primaryIndex = 0; }
+                    return primary[i];
+                }
+            }
+            for (int i = secondaryIndex; i < secondary.Count; i++) {
+                if (!firstLettersOnScreen.Contains(secondary[i][0]) && !activeWords.Contains(secondary[i])) {
+                    secondaryIndex = i + 1;
+                    if (secondaryIndex >= secondary.Count) { Shuffle(secondary); secondaryIndex = 0; }
+                    return secondary[i];
                 }
             }
         }
         // waves (9+)
         else if (currentWave >= 9) {
-            foreach (string word in hardWords) {
-                if (!firstLettersOnScreen.Contains(word[0]) && !activeWords.Contains(word)) {
-                    hardWords.Remove(word);
-                    return word;
+            for (int i = _hardIndex; i < hardWords.Count; i++) {
+                if (!firstLettersOnScreen.Contains(hardWords[i][0]) && !activeWords.Contains(hardWords[i])) {
+                    _hardIndex = i + 1;
+                    if (_hardIndex >= hardWords.Count) { Shuffle(hardWords); _hardIndex = 0; }
+                    return hardWords[i];
                 }
             }
         }

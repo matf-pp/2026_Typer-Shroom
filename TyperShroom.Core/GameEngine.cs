@@ -11,13 +11,23 @@ namespace TyperShroom.Core {
         private int _totalBugsKilled = 0;
         private int _totalKeystrokes = 0;
         private int _correctKeystrokes = 0;
+        private double _spawnInterval = 2;
+        private double _timer = 0.0;
 
         public GameState CurrentState => _state;
 
         public void StartGame() {
+            _wordManager = new WordManager();
             _state.Lives = 3;
             _state.Wave = 1;
             _state.Score = 0;
+            _state.ActiveBugs = new List<Bug>();
+            _state.CurrentTarget = null;
+            _state.IsGameOver = false;
+            _bugsKilledThisWave = 0;
+            _totalBugsKilled = 0;
+            _totalKeystrokes = 0;
+            _correctKeystrokes = 0;
             _startTime = DateTime.Now;
             for (int i = 0; i < 3; i++) {
                 SpawnBug();
@@ -87,6 +97,7 @@ namespace TyperShroom.Core {
                         // if wave is cleared
                         if (_bugsKilledThisWave >= 10) {
                             _state.Wave++;
+                            _spawnInterval *= 0.92;
                             OnWaveCleared?.Invoke();
                             _bugsKilledThisWave = 0;
                         }
@@ -103,13 +114,26 @@ namespace TyperShroom.Core {
         }
 
         public void Update(double deltaTime) {
+            if (_state.IsGameOver) return;
+
+            // if time from the last bug spawn is bigger then spawnInterval AND 
+            // there is less then 10 bugs on Screen -> SpawnBug()
+            _timer += deltaTime;
+            if (_timer >= _spawnInterval) {
+                if (_state.ActiveBugs.Count < 10) {
+                    SpawnBug();
+                }
+                _timer = 0;
+            }
+
             List<Bug> toRemove = new List<Bug>();
 
             foreach (Bug bug in _state.ActiveBugs) {
-                bug.PositionX -= (int)(bug.Speed * deltaTime);
+                bug.PositionX -= bug.Speed * deltaTime;
 
                 // if bug reached the mushroom update, but dont spawn new bug -> too much pressure
                 if (bug.PositionX <= 15) {
+                    Console.WriteLine($"Bug reached mushroom! PositionX={bug.PositionX}, Lives={_state.Lives}");
                     _state.Lives -= 1;
                     OnBugReached?.Invoke(bug);
                     toRemove.Add(bug);
@@ -130,10 +154,10 @@ namespace TyperShroom.Core {
                 _state.ActiveBugs.Remove(bug);
 
             // for every killed bug -> spawn new one
-            foreach(Bug bug in toRemove) {
-                if (bug.IsDead)
-                    SpawnBug();
-            }
+            // foreach(Bug bug in toRemove) {
+            //     if (bug.IsDead)
+            //         SpawnBug();
+            // }
         }
 
         public GameResult EndGame() => new GameResult {
@@ -144,7 +168,7 @@ namespace TyperShroom.Core {
             TotalKeystrokes = _totalKeystrokes,
             CorrectKeystrokes = _correctKeystrokes,
             Accuracy = _totalKeystrokes != 0 ? (double)_correctKeystrokes / _totalKeystrokes : 0,
-            WPM = (int)(_totalBugsKilled / (DateTime.Now - _startTime).TotalMinutes),
+            WPM = (int)(_correctKeystrokes / 5.0 / (DateTime.Now - _startTime).TotalMinutes),
             GameDuration = DateTime.Now - _startTime,
             PlayedAt = _startTime,
         };
