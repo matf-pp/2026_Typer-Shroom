@@ -16,7 +16,7 @@ public class Game1 : Game
 
     private IGameEngine _engine;
 
-    private Texture2D _background, _mushroom, _spider, _beetle, _ant;
+    private Texture2D _background, _mushroom, _spider, _ant, _worm, _mosquito, _fly, _butterfly, _pixel;
 
     private MainMenu? _mainMenu;
     private bool _gameStarted = false;
@@ -28,12 +28,16 @@ public class Game1 : Game
     private Screen _currentScreen = Screen.MainMenu;
     private ResultScreen? _resultScreen;
     private GameResult? _lastResult;
+    private double _waveClearedTimer = 3.0;
+    private bool _showWaveCleared = false;
 
     private KeyboardState _previousKeyboard;
     public Game1()
     {
         // Initialize GPU and window
         _graphics = new GraphicsDeviceManager(this);
+        _graphics.PreferredBackBufferWidth = 1280;
+        _graphics.PreferredBackBufferHeight = 720;
 
         // Images and fonts location
         Content.RootDirectory = "Content";
@@ -41,6 +45,13 @@ public class Game1 : Game
         IsMouseVisible = true;
 
         _engine = new GameEngine();
+
+        // code that runs when wave is cleared
+        _engine.OnWaveCleared += () => {
+            _showWaveCleared = true;
+            _waveClearedTimer = 3.0;
+            _engine.CurrentState.IsWaveClearing = true;
+        };
     }
 
     protected override void Initialize()
@@ -54,11 +65,17 @@ public class Game1 : Game
         //
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
+        _pixel = new Texture2D(GraphicsDevice, 1, 1);
+        _pixel.SetData(new[] { Color.White });
+
         _background = Content.Load<Texture2D>("images/background");
         _mushroom   = Content.Load<Texture2D>("images/mushroom");
         _spider     = Content.Load<Texture2D>("images/spider");
-        _beetle     = Content.Load<Texture2D>("images/beetle");
+        _butterfly  = Content.Load<Texture2D>("images/butterfly");
         _ant        = Content.Load<Texture2D>("images/ant");
+        _fly        = Content.Load<Texture2D>("images/fly");
+        _mosquito   = Content.Load<Texture2D>("images/mosquito");
+        _worm       = Content.Load<Texture2D>("images/worm");
 
         
         _font = Content.Load<SpriteFont>("DefaultFont");
@@ -83,13 +100,16 @@ public class Game1 : Game
         if (keyboard.IsKeyDown(Keys.Escape))
             Exit();
 
-        foreach (Keys key in keyboard.GetPressedKeys())
+        if (!_showWaveCleared)
         {
-            // if the key is down now AND was already down last frame, skip it. Only
-            // Only process it if it's new.
-            if (key >= Keys.A && key <= Keys.Z && !_previousKeyboard.IsKeyDown(key))
+            foreach (Keys key in keyboard.GetPressedKeys())
             {
-                _engine.ProcessKeystroke((char)('a' + (key - Keys.A)));
+                // if the key is down now AND was already down last frame, skip it. Only
+                // Only process it if it's new.
+                if (key >= Keys.A && key <= Keys.Z && !_previousKeyboard.IsKeyDown(key))
+                {
+                    _engine.ProcessKeystroke((char)('a' + (key - Keys.A)));
+                }
             }
         }
         
@@ -125,10 +145,21 @@ public class Game1 : Game
 
         if (_currentScreen == Screen.Game)
         {
+            
             if (_engine.CurrentState.IsGameOver)
             {
                 _lastResult = _engine.EndGame();
                 _currentScreen = Screen.Result;   
+            }
+
+            if (_showWaveCleared)
+            {
+                _waveClearedTimer -= gameTime.ElapsedGameTime.TotalSeconds; // timer -= deltaTime
+                if (_waveClearedTimer <= 0)
+                {
+                    _showWaveCleared = false;
+                    _engine.CurrentState.IsWaveClearing = false;
+                }
             }
         }
 
@@ -186,6 +217,7 @@ public class Game1 : Game
         _spriteBatch?.Begin();
 
         // Draw the texture at the center of the window
+        float bgScale = Math.Max((float)width / _background.Width, (float)height / _background.Height);
         _spriteBatch?.Draw(
             _background,                // texture
             new Vector2(                // position
@@ -197,7 +229,7 @@ public class Game1 : Game
             new Vector2(                // origin
                 _background.Width,
                 _background.Height) * 0.5f,
-            1.0f,                       // scale
+            bgScale,                    // scale
             SpriteEffects.None,         // effects
             0.0f                        // layerDepth
         );
@@ -216,7 +248,6 @@ public class Game1 : Game
             0f
         );
 
-
         // HUD
         _spriteBatch?.DrawString(
                                  _font,                     // font
@@ -227,8 +258,11 @@ public class Game1 : Game
 
 
         // bugs
+        // first draw non targeted bug first
         foreach (var bug in state.ActiveBugs)
         {
+            if (bug == state.CurrentTarget) continue;
+
             string typed = bug.Word.Substring(0, bug.Word.Length - bug.RemainingWord.Length);
             string remaining = bug.RemainingWord;
 
@@ -237,14 +271,17 @@ public class Game1 : Game
             
             Texture2D? bugTexture = bug.BugType switch
             {
-                "spider" => _spider,
-                "beetle" => _beetle,
-                "ant"    => _ant,
-                _        => _mushroom
+                "spider"    => _spider,
+                "butterfly" => _butterfly,
+                "ant"       => _ant,
+                "fly"       => _fly,
+                "mosquito"  => _mosquito,
+                "worm"      => _worm,
+                _           => _mushroom
             };
 
             // Texture normalization
-            float targetHeight = height * 0.1f;
+            float targetHeight = height * 0.15f;
             float bugScale = targetHeight / bugTexture.Height;
 
             // Bug texture
@@ -260,11 +297,65 @@ public class Game1 : Game
                 0f
             );
 
+            // Background behind word
+            Vector2 wordSize = _font.MeasureString(bug.Word);
+            _spriteBatch?.Draw(_pixel, new Rectangle((int)pos.X - 2, (int)pos.Y + 15, (int)wordSize.X + 4, (int)wordSize.Y + 4), Color.Black * 0.5f);
+
             // Typed letters are gray
-            _spriteBatch?.DrawString(_font, typed, pos, Color.Black);
+            _spriteBatch?.DrawString(_font, typed, new Vector2(pos.X, pos.Y + 15), Color.Gray);
 
             // Remaining letters are red
-            _spriteBatch?.DrawString(_font, remaining, new Vector2(pos.X + typedSize.X, pos.Y), Color.Red);
+            _spriteBatch?.DrawString(_font, remaining, new Vector2(pos.X + typedSize.X, pos.Y + 15), Color.Red);
+        }
+
+        // then draw targeted bug
+        foreach (var bug in state.ActiveBugs)
+        {
+            if (bug != state.CurrentTarget) continue;
+
+            string typed = bug.Word.Substring(0, bug.Word.Length - bug.RemainingWord.Length);
+            string remaining = bug.RemainingWord;
+
+            Vector2 pos = new Vector2((float)bug.PositionX / 100f * width, bug.PositionY / 100f * height);
+            Vector2 typedSize = _font.MeasureString(typed);
+            
+            Texture2D? bugTexture = bug.BugType switch
+            {
+                "spider"    => _spider,
+                "butterfly" => _butterfly,
+                "ant"       => _ant,
+                "fly"       => _fly,
+                "mosquito"  => _mosquito,
+                "worm"      => _worm,
+                _           => _mushroom
+            };
+
+            // Texture normalization
+            float targetHeight = height * 0.15f;
+            float bugScale = targetHeight / bugTexture.Height;
+
+            // Bug texture
+            _spriteBatch?.Draw(
+                bugTexture,
+                new Vector2(pos.X + 50, pos.Y),
+                null,
+                Color.White,
+                0f,
+                new Vector2(bugTexture.Width / 2f, bugTexture.Height / 2f),
+                bugScale,
+                SpriteEffects.None,
+                0f
+            );
+
+            // Background behind word
+            Vector2 wordSize = _font.MeasureString(bug.Word);
+            _spriteBatch?.Draw(_pixel, new Rectangle((int)pos.X - 2, (int)pos.Y + 15, (int)wordSize.X + 4, (int)wordSize.Y + 4), Color.Black * 0.5f);
+
+            // Typed letters are gray
+            _spriteBatch?.DrawString(_font, typed, new Vector2(pos.X, pos.Y + 15), Color.Gray);
+
+            // Remaining letters are red
+            _spriteBatch?.DrawString(_font, remaining, new Vector2(pos.X + typedSize.X, pos.Y + 15), Color.Red);
         }
 
         // input
@@ -280,6 +371,20 @@ public class Game1 : Game
                                              0.9f * height),
                                  Color.Yellow
                                 );
+
+
+        // wave
+        if (_showWaveCleared)
+        {
+            string waveText = $"Wave {_engine.CurrentState.Wave - 1} cleared!";
+            Vector2 waveTextSize = _font.MeasureString(waveText);
+            _spriteBatch?.DrawString(
+                _font,
+                waveText,
+                new Vector2(width / 2f - waveTextSize.X / 2f, height / 2f - waveTextSize.Y / 2f),
+                Color.Black
+            );
+        }
 
         _spriteBatch?.End();
 

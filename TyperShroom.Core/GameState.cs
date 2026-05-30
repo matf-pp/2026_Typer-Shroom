@@ -9,5 +9,6 @@ namespace TyperShroom.Core {
         public string CurrentInput  { get; set; } = string.Empty;
         public Bug? CurrentTarget   { get; set; } 
         public bool IsGameOver      { get; set; }
+        public bool IsWaveClearing  { get; set; }
     }
 }

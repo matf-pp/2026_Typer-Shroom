@@ -8,6 +8,8 @@ namespace TyperShroom.Core {
         private DateTime _startTime;
         private Random _random = new Random();
         private int _bugsKilledThisWave = 0;
+        private int _bugsSpawnedThisWave = 0;
+        private int _bugsPerWave = 8;
         private int _totalBugsKilled = 0;
         private int _totalKeystrokes = 0;
         private int _correctKeystrokes = 0;
@@ -25,12 +27,15 @@ namespace TyperShroom.Core {
             _state.CurrentTarget = null;
             _state.IsGameOver = false;
             _bugsKilledThisWave = 0;
+            _bugsSpawnedThisWave = 0;
+            _bugsPerWave = 8;
             _totalBugsKilled = 0;
             _totalKeystrokes = 0;
             _correctKeystrokes = 0;
             _startTime = DateTime.Now;
             for (int i = 0; i < 3; i++) {
                 SpawnBug();
+                _bugsSpawnedThisWave++;
             }
         }
 
@@ -44,13 +49,23 @@ namespace TyperShroom.Core {
 
             Bug.Word = _wordManager.GetWord(_state.Wave, firstLetters, _state.ActiveBugs);
             Bug.RemainingWord = Bug.Word;
-            Bug.PositionX = 100;
-            Bug.PositionY = _random.Next(5, 95);
             Bug.Speed = 2.0 + _state.Wave * 0.5;
 
-            List<string> bugTypes = ["ant", "spider", "beetle"];
-            Bug.BugType = bugTypes[_random.Next(0, 3)];
+            // choosing the bug type, randomness in chossing the air or ground type
+            // when updating the ground and air has to have same number of elements for this to work
+            List<string> groundBugTypes = ["ant", "spider", "worm"];
+            List<string> airBugTypes = ["fly", "mosquito", "butterfly"];
 
+            List<string>[] bugTypes = new List<string>[2];
+            bugTypes[0] = groundBugTypes;
+            bugTypes[1] = airBugTypes;
+            int bugType = _random.Next(0, 3);
+            int groundType = _random.Next(2);
+
+            Bug.BugType = bugTypes[groundType][bugType];
+
+            Bug.PositionX = 100;
+            Bug.PositionY = groundType == 0 ? _random.Next(65, 90) : _random.Next(10, 40); 
             Bug.IsDead = false;
             Bug.ReachedMushroom = false;
 
@@ -95,11 +110,13 @@ namespace TyperShroom.Core {
                         _state.CurrentTarget = null;
 
                         // if wave is cleared
-                        if (_bugsKilledThisWave >= 10) {
+                        if (_bugsKilledThisWave >= _bugsPerWave) {
                             _state.Wave++;
                             _spawnInterval *= 0.92;
                             OnWaveCleared?.Invoke();
                             _bugsKilledThisWave = 0;
+                            _bugsSpawnedThisWave = 0;
+                            _bugsPerWave++;
                         }
                     }
 
@@ -115,43 +132,47 @@ namespace TyperShroom.Core {
 
         public void Update(double deltaTime) {
             if (_state.IsGameOver) return;
-
-            // if time from the last bug spawn is bigger then spawnInterval AND 
-            // there is less then 10 bugs on Screen -> SpawnBug()
-            _timer += deltaTime;
-            if (_timer >= _spawnInterval) {
-                if (_state.ActiveBugs.Count < 10) {
-                    SpawnBug();
-                }
-                _timer = 0;
-            }
-
             List<Bug> toRemove = new List<Bug>();
 
+            // if time from the last bug spawn is bigger then spawnInterval AND 
+            // there is less then 15 bugs on Screen -> SpawnBug()
+            // only do this when there is no wave clearing happening
+            if (!_state.IsWaveClearing) {
+                _timer += deltaTime;
+                if (_timer >= _spawnInterval) {
+                    if (_bugsSpawnedThisWave < _bugsPerWave && _state.ActiveBugs.Count < 15) {
+                        SpawnBug();
+                        _bugsSpawnedThisWave++;
+                    }
+                    _timer = 0;
+                }
+
+                foreach (Bug bug in _state.ActiveBugs) {
+                    bug.PositionX -= bug.Speed * deltaTime;
+
+                    if (bug.PositionX <= 15) {
+                        Console.WriteLine($"Bug reached mushroom! PositionX={bug.PositionX}, Lives={_state.Lives}");
+                        _state.Lives -= 1;
+                        OnBugReached?.Invoke(bug);
+                        toRemove.Add(bug);
+                        bug.ReachedMushroom = true;
+                        _bugsKilledThisWave++;
+                    }
+                }
+            }
+
             foreach (Bug bug in _state.ActiveBugs) {
-                bug.PositionX -= bug.Speed * deltaTime;
+                if (bug.IsDead) toRemove.Add(bug);
+            }
 
-                // if bug reached the mushroom update, but dont spawn new bug -> too much pressure
-                if (bug.PositionX <= 15) {
-                    Console.WriteLine($"Bug reached mushroom! PositionX={bug.PositionX}, Lives={_state.Lives}");
-                    _state.Lives -= 1;
-                    OnBugReached?.Invoke(bug);
-                    toRemove.Add(bug);
-                    bug.ReachedMushroom = true;
-                }
-
-                if (bug.IsDead) {
-                    toRemove.Add(bug);
-                }
+            foreach(Bug bug in toRemove) {
+                _state.ActiveBugs.Remove(bug);
             }
 
             if (_state.Lives <= 0) {
-                    OnGameOver?.Invoke();
-                    _state.IsGameOver = true;
+                OnGameOver?.Invoke();
+                _state.IsGameOver = true;
             }
-
-            foreach(Bug bug in toRemove) 
-                _state.ActiveBugs.Remove(bug);
 
             // for every killed bug -> spawn new one
             // foreach(Bug bug in toRemove) {
