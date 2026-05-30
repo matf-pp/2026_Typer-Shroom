@@ -73,6 +73,17 @@ namespace TyperShroom.Core {
             _state.ActiveBugs.Add(Bug);
         }
 
+        private void CheckWaveCleared() {
+            if (_bugsKilledThisWave >= _bugsPerWave) {
+                _state.Wave++;
+                _spawnInterval *= 0.92;
+                OnWaveCleared?.Invoke();
+                _bugsKilledThisWave = 0;
+                _bugsSpawnedThisWave = 0;
+                _bugsPerWave++;
+            }
+        }
+
         public void ProcessKeystroke(char key) {
             // no target locked — check if typed key matches any bugs first letter to acquire target
             if (_state.CurrentTarget == null) {
@@ -109,15 +120,7 @@ namespace TyperShroom.Core {
                         _state.CurrentTarget.IsDead = true;
                         _state.CurrentTarget = null;
 
-                        // if wave is cleared
-                        if (_bugsKilledThisWave >= _bugsPerWave) {
-                            _state.Wave++;
-                            _spawnInterval *= 0.92;
-                            OnWaveCleared?.Invoke();
-                            _bugsKilledThisWave = 0;
-                            _bugsSpawnedThisWave = 0;
-                            _bugsPerWave++;
-                        }
+                        CheckWaveCleared();
                     }
 
                 }
@@ -157,6 +160,10 @@ namespace TyperShroom.Core {
                         toRemove.Add(bug);
                         bug.ReachedMushroom = true;
                         _bugsKilledThisWave++;
+                        CheckWaveCleared();
+                        if (bug == _state.CurrentTarget) {
+                            _state.CurrentTarget = null;
+                        }
                     }
                 }
             }
