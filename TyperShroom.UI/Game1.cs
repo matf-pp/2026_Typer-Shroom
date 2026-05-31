@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Audio;
+using Microsoft.Xna.Framework.Media;
 using TyperShroom.Core;
 using Vector2 = Microsoft.Xna.Framework.Vector2;
 using TyperShroom.UI.Screens;
@@ -19,7 +20,8 @@ public class Game1 : Game
 
     private Texture2D _background, _mainMenuBackground, _mushroom, _spider, _spiderSpritesheet, _ant, _antSpritesheet, _worm, _wormSpritesheet, _mosquito, _mosquitoSpritesheet, _fly, _flySpritesheet, _butterfly, _butterflySpritesheet, _splashSpritesheet, _pixel;
     private Texture2D _mushroom2, _mushroom3, _mushroom4;
-    private SoundEffect _squashSound, _eatSound;
+    private SoundEffect _squashSound, _eatSound, _mistypeSound;
+    private Song _backgroundMusic;
     private double _mushroomFlashTimer = 0;
     private int frame = 0;
     private double frameTime = 0;
@@ -55,14 +57,21 @@ public class Game1 : Game
 
         _engine = new GameEngine();
 
-        _engine.OnBugReached += (bug) => {
+        _engine.OnBugReached += (bug) => 
+        {
             _mushroomFlashTimer = 0.4;
             _eatSound.Play();
         };
 
-        _engine.OnBugKilled += (bug) => {
+        _engine.OnBugKilled += (bug) => 
+        {
             _splashEffects.Add(new SplashEffect { PosX = (float)bug.PositionX, PosY = bug.PositionY, Timer = 0 });
             _squashSound.Play();
+        };
+
+        _engine.OnBugMistyped += (bug) =>
+        {
+            _mistypeSound.Play();
         };
 
         // code that runs when wave is cleared
@@ -87,27 +96,32 @@ public class Game1 : Game
         _pixel = new Texture2D(GraphicsDevice, 1, 1);
         _pixel.SetData(new[] { Color.White });
 
-        _background = Content.Load<Texture2D>("images/background");
-        _mainMenuBackground = Content.Load<Texture2D>("images/main-menu-background");
-        _mushroom   = Content.Load<Texture2D>("images/mushroom");
-        _mushroom2  = Content.Load<Texture2D>("images/mushroom_2");
-        _mushroom3  = Content.Load<Texture2D>("images/mushroom_3");
-        _mushroom4  = Content.Load<Texture2D>("images/mushroom-4");
-        _spider     = Content.Load<Texture2D>("images/spider");
-        _spiderSpritesheet = Content.Load<Texture2D>("images/spider-spritesheet");
-        _butterfly  = Content.Load<Texture2D>("images/butterfly");
+        _background           = Content.Load<Texture2D>("images/background");
+        _mainMenuBackground   = Content.Load<Texture2D>("images/main-menu-background");
+        _mushroom             = Content.Load<Texture2D>("images/mushroom");
+        _mushroom2            = Content.Load<Texture2D>("images/mushroom_2");
+        _mushroom3            = Content.Load<Texture2D>("images/mushroom_3");
+        _mushroom4            = Content.Load<Texture2D>("images/mushroom-4");
+        _spider               = Content.Load<Texture2D>("images/spider");
+        _spiderSpritesheet    = Content.Load<Texture2D>("images/spider-spritesheet");
+        _butterfly            = Content.Load<Texture2D>("images/butterfly");
         _butterflySpritesheet = Content.Load<Texture2D>("images/butterfly-spritesheet");
-        _ant        = Content.Load<Texture2D>("images/ant");
-        _antSpritesheet = Content.Load<Texture2D>("images/ant-spritesheet");
-        _fly        = Content.Load<Texture2D>("images/fly");
-        _flySpritesheet = Content.Load<Texture2D>("images/fly-spritesheet");
-        _mosquito   = Content.Load<Texture2D>("images/mosquito");
-        _mosquitoSpritesheet = Content.Load<Texture2D>("images/mosquito-spritesheet");
-        _worm       = Content.Load<Texture2D>("images/worm");
-        _wormSpritesheet = Content.Load<Texture2D>("images/worm-spritesheet");
-        _splashSpritesheet = Content.Load<Texture2D>("images/splash-spritesheet");
-        _squashSound = Content.Load<SoundEffect>("sounds/squash");
-        _eatSound = Content.Load<SoundEffect>("sounds/eat");
+        _ant                  = Content.Load<Texture2D>("images/ant");
+        _antSpritesheet       = Content.Load<Texture2D>("images/ant-spritesheet");
+        _fly                  = Content.Load<Texture2D>("images/fly");
+        _flySpritesheet       = Content.Load<Texture2D>("images/fly-spritesheet");
+        _mosquito             = Content.Load<Texture2D>("images/mosquito");
+        _mosquitoSpritesheet  = Content.Load<Texture2D>("images/mosquito-spritesheet");
+        _worm                 = Content.Load<Texture2D>("images/worm");
+        _wormSpritesheet      = Content.Load<Texture2D>("images/worm-spritesheet");
+        _splashSpritesheet    = Content.Load<Texture2D>("images/splash-spritesheet");
+        _squashSound          = Content.Load<SoundEffect>("sounds/squash");
+        _eatSound             = Content.Load<SoundEffect>("sounds/eat");
+        _mistypeSound         = Content.Load<SoundEffect>("sounds/mistype");
+        _backgroundMusic      = Song.FromUri("background-music", new Uri(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Content/sounds/background-music.ogg")));
+
+        MediaPlayer.IsRepeating = true;
+        MediaPlayer.Play(_backgroundMusic);
 
         
         _font = Content.Load<SpriteFont>("DefaultFont");
@@ -219,14 +233,6 @@ public class Game1 : Game
     {
         // Clears last frame
         GraphicsDevice.Clear(Color.Black);
-
-        // if(!_gameStarted)
-        // {
-        //     _spriteBatch?.Begin();
-        //     _mainMenu?.Draw(_spriteBatch!);
-        //     _spriteBatch?.End();
-        //     return;
-        // }
 
         if (_currentScreen == Screen.MainMenu)
         {

@@ -1,6 +1,5 @@
 path syle:
-echo 'PS1="\[\033[1;32m\]typer$ \[\033[0m\]"' >> ~/.bashrc
-source ~/.bashrc
+PS1="\[\e[1;32m\]typer\[\e[0m\] $ "
 
 
 search:
@@ -16,3 +15,38 @@ M = Modified    → Git knows this file but it has been
 
 
 
+In C#, the convention is:
+- camelCase (targetFlag) — local variables and parameters
+- PascalCase (TargetFlag) — properties, methods, classes, events
+- _camelCase (_totalKeystrokes) — private fields
+
+
+
+checklist:
+
+void StartGame()              → you write code that starts the game
+                                sets lives to 5, spawns first bugs, starts timer
+
+void Update(double deltaTime) → you write code that runs 60x per second
+                                moves bugs toward mushroom
+                                checks if bug reached center
+                                decreases lives
+
+void ProcessKeystroke(char)   → you write code that handles player typing
+                                matches letter to bug
+                                kills bug when word complete
+                                counts errors
+
+GameResult EndGame()          → you write code that calculates final stats
+                                returns filled GameResult object
+
+OnBugSpawned                  → you fire this when a new bug appears
+OnBugKilled                   → you fire this when player kills a bug  
+OnBugReached                  → you fire this when bug reaches mushroom
+OnGameOver                    → you fire this when lives hit 0
+
+
+
+- CurrentInput in GameState is not needed prb
+- Penalizing the mistype by reducing the score
+- Maybe make 

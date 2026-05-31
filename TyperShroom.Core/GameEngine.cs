@@ -103,6 +103,7 @@ namespace TyperShroom.Core {
                     _totalKeystrokes++; 
                     _state.Score -= 10;
                     OnKeyNotMatched?.Invoke();
+                    OnBugMistyped?.Invoke(_state.CurrentTarget);
                 }
             }
             // if a target is already locked -> directly update remainingWord and states
@@ -154,7 +155,7 @@ namespace TyperShroom.Core {
                 foreach (Bug bug in _state.ActiveBugs) {
                     bug.PositionX -= bug.Speed * deltaTime;
 
-                    if (bug.PositionX <= 25) {
+                    if (bug.PositionX <= 30) {
                         _state.Lives -= 1;
                         OnBugReached?.Invoke(bug);
                         toRemove.Add(bug);

@@ -128,11 +128,20 @@
 /processorParam:TextureFormat=Color
 /build:images/mushroom.PNG
 
+#begin sounds/background-music.ogg
+/copy:sounds/background-music.ogg
+
 #begin sounds/eat.wav
 /importer:WavImporter
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:sounds/eat.wav
+
+#begin sounds/mistype.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:sounds/mistype.wav
 
 #begin sounds/squash.wav
 /importer:WavImporter
