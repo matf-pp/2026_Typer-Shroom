@@ -18,11 +18,22 @@
   </ItemGroup>
 
 <Target Name="BuildContent" BeforeTargets="Build">
-  <Exec Command="mgcb Content/Content.mgcb" />
+  <Exec Command="mgcb Content/Content.mgcb" WorkingDirectory="$(MSBuildProjectDirectory)" />
   <ItemGroup>
     <XnbFiles Include="Content/bin/Content/**/*.xnb" />
+    <RawContentFiles Include="Content/bin/Content/**/*" Exclude="Content/bin/Content/**/*.xnb" />
   </ItemGroup>
   <Copy SourceFiles="@(XnbFiles)" DestinationFiles="@(XnbFiles->'$(OutputPath)/Content/%(RecursiveDir)%(Filename)%(Extension)')" />
+  <Copy SourceFiles="@(RawContentFiles)" DestinationFiles="@(RawContentFiles->'$(OutputPath)/Content/%(RecursiveDir)%(Filename)%(Extension)')" />
+</Target>
+
+<Target Name="PublishContent" AfterTargets="Publish">
+  <ItemGroup>
+    <XnbFiles Include="Content/bin/Content/**/*.xnb" />
+    <RawContentFiles Include="Content/bin/Content/**/*" Exclude="Content/bin/Content/**/*.xnb" />
+  </ItemGroup>
+  <Copy SourceFiles="@(XnbFiles)" DestinationFiles="@(XnbFiles->'$(PublishDir)/Content/%(RecursiveDir)%(Filename)%(Extension)')" />
+  <Copy SourceFiles="@(RawContentFiles)" DestinationFiles="@(RawContentFiles->'$(PublishDir)/Content/%(RecursiveDir)%(Filename)%(Extension)')" />
 </Target>
 
 </Project>
