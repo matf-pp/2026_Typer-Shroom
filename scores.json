@@ -13,6 +13,45 @@
     "PlayedAt": "2026-05-31T17:46:01.3389704+02:00"
   },
   {
+    "PlayerName": "DIME",
+    "FinalScore": 2135,
+    "WavesReached": 8,
+    "BugsKilled": 88,
+    "LivesLost": 3,
+    "TotalKeystrokes": 471,
+    "CorrectKeystrokes": 432,
+    "Accuracy": 0.9171974522292994,
+    "WPM": 27,
+    "GameDuration": "00:03:08.2168355",
+    "PlayedAt": "2026-05-31T21:18:45.8318619+02:00"
+  },
+  {
+    "PlayerName": "DIME",
+    "FinalScore": 1080,
+    "WavesReached": 5,
+    "BugsKilled": 38,
+    "LivesLost": 3,
+    "TotalKeystrokes": 134,
+    "CorrectKeystrokes": 130,
+    "Accuracy": 0.9701492537313433,
+    "WPM": 13,
+    "GameDuration": "00:01:57.0665447",
+    "PlayedAt": "2026-05-31T21:15:06.7171794+02:00"
+  },
+  {
+    "PlayerName": "GGG",
+    "FinalScore": 680,
+    "WavesReached": 3,
+    "BugsKilled": 23,
+    "LivesLost": 3,
+    "TotalKeystrokes": 74,
+    "CorrectKeystrokes": 73,
+    "Accuracy": 0.9864864864864865,
+    "WPM": 8,
+    "GameDuration": "00:01:40.0831169",
+    "PlayedAt": "2026-05-31T21:26:12.075504+02:00"
+  },
+  {
     "PlayerName": "KEJ",
     "FinalScore": 625,
     "WavesReached": 4,
@@ -89,18 +128,5 @@
     "WPM": 0,
     "GameDuration": "00:00:00",
     "PlayedAt": "2026-05-31T17:30:48.7328379+02:00"
-  },
-  {
-    "PlayerName": "Maja",
-    "FinalScore": 210,
-    "WavesReached": 2,
-    "BugsKilled": 0,
-    "LivesLost": 0,
-    "TotalKeystrokes": 0,
-    "CorrectKeystrokes": 0,
-    "Accuracy": 0.7,
-    "WPM": 0,
-    "GameDuration": "00:00:00",
-    "PlayedAt": "2026-05-31T17:30:48.732838+02:00"
   }
 ]

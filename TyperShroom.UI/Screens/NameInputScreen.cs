@@ -59,8 +59,9 @@ namespace TyperShroom.UI.Screens
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Draw(SpriteBatch spriteBatch, Texture2D background)
         {
+            spriteBatch.Draw(background, new Rectangle(0, 0, _width, _height), Color.White);
             string title = "GAME OVER";
             Vector2 titleSize = _font.MeasureString(title);
             spriteBatch.DrawString(_font, title,

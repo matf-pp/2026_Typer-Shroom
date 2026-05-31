@@ -33,8 +33,10 @@ namespace TyperShroom.UI.Screens
                 ReturnToMenu = true;
         }
 
-        public void Draw(SpriteBatch spriteBatch, GameResult result, List<GameResult> top5)
+        public void Draw(SpriteBatch spriteBatch, GameResult result, List<GameResult> top5, Texture2D background)
         {
+            spriteBatch.Draw(background, new Rectangle(0, 0, _width, _height), Color.White);
+
             int centerX = _width / 2;
 
             // Title
@@ -66,7 +68,7 @@ namespace TyperShroom.UI.Screens
             float colScore = centerX - 80f;
             float colWave = centerX + 60f;
             float colAcc = centerX + 160f;
-            float startY = _height * 0.41f;
+            float startY = _height * 0.46f;
             float rowHeight = _height * 0.09f;
 
             spriteBatch.DrawString(_font, "NAME", new Vector2(colName, startY - 28), Color.Gray);
@@ -78,7 +80,7 @@ namespace TyperShroom.UI.Screens
             for (int i = 0; i < top5.Count; i++)
             {
                 var r = top5[i];
-                float y = startY + i * rowHeight;
+                float y = startY + 15f + i * rowHeight;
 
                 bool isCurrentPlayer = r.PlayerName == result.PlayerName && r.FinalScore == result.FinalScore;
                 Color rowColor = isCurrentPlayer ? Color.LightGreen : Color.White;

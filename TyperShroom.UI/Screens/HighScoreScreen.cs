@@ -43,7 +43,7 @@ namespace TyperShroom.UI.Screens
             string title = "HIGH SCORES";
             Vector2 titleSize = _font.MeasureString(title);
             spriteBatch.DrawString(_font, title,
-                new Vector2(centerX - titleSize.X / 2, _height * 0.04f), Color.Yellow);
+                new Vector2(centerX - titleSize.X / 2, _height * 0.08f), Color.Yellow);
 
             // Column headers
             float colRank = centerX - 320f;
@@ -51,8 +51,8 @@ namespace TyperShroom.UI.Screens
             float colScore = centerX - 20f;
             float colWave = centerX + 130f;
             float colAcc = centerX + 230f;
-            float startY = _height * 0.25f;
-            float rowHeight = _height * 0.072f;
+            float rowHeight = _height * 0.057f;
+            float startY = _height * 0.38f - 2 * rowHeight;
 
             spriteBatch.DrawString(_font, "#", new Vector2(colRank, startY - 40), Color.Gray);
             spriteBatch.DrawString(_font, "NAME", new Vector2(colName, startY - 40), Color.Gray);

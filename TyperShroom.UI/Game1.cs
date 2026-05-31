@@ -264,7 +264,7 @@ public class Game1 : Game
         if (_currentScreen == Screen.NameInput)
         {
             _spriteBatch?.Begin();
-            _nameInputScreen?.Draw(_spriteBatch!);
+            _nameInputScreen?.Draw(_spriteBatch!, _mainMenuBackground);
             _spriteBatch?.End();
             return;
         }
@@ -272,7 +272,7 @@ public class Game1 : Game
         if (_currentScreen == Screen.Result)
         {
             _spriteBatch?.Begin();
-            _resultScreen?.Draw(_spriteBatch!, _lastResult!, _scoreRepository.LoadTop5());
+            _resultScreen?.Draw(_spriteBatch!, _lastResult!, _scoreRepository.LoadTop5(), _mainMenuBackground);
             _spriteBatch?.End();
             return;
         }
