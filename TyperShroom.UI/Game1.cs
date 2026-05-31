@@ -5,17 +5,14 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Media;
 using TyperShroom.Core;
+using TyperShroom.Data;
 using Vector2 = Microsoft.Xna.Framework.Vector2;
 using TyperShroom.UI.Screens;
 
 public class Game1 : Game
 {
-    // Window creation, resolution, fullscreen
     private GraphicsDeviceManager _graphics;
-
-    // Sprites, text, images
     private SpriteBatch? _spriteBatch;
-
     private IGameEngine _engine;
 
     private Texture2D _background, _mainMenuBackground, _mushroom, _spider, _spiderSpritesheet, _ant, _antSpritesheet, _worm, _wormSpritesheet, _mosquito, _mosquitoSpritesheet, _fly, _flySpritesheet, _butterfly, _butterflySpritesheet, _splashSpritesheet, _pixel;
@@ -30,40 +27,37 @@ public class Game1 : Game
     private List<SplashEffect> _splashEffects = new();
 
     private MainMenu? _mainMenu;
-    private bool _gameStarted = false;
-
     private SpriteFont? _font;
 
-    private enum Screen { MainMenu, Game, GameOver, Result }
+    private enum Screen { MainMenu, Game, NameInput, Result, HighScores }
 
     private Screen _currentScreen = Screen.MainMenu;
+    private ResultScreen? _resultScreen;
+    private NameInputScreen? _nameInputScreen;
+    private HighScoreScreen? _highScoreScreen;
     private GameResult? _lastResult;
     private double _waveClearedTimer = 3.0;
-    private double _gameOverTimer = 0;
     private bool _showWaveCleared = false;
-
     private KeyboardState _previousKeyboard;
+
+    private ScoreRepository _scoreRepository = new ScoreRepository();
+
     public Game1()
     {
-        // Initialize GPU and window
         _graphics = new GraphicsDeviceManager(this);
         _graphics.PreferredBackBufferWidth = 1280;
         _graphics.PreferredBackBufferHeight = 720;
-
-        // Images and fonts location
         Content.RootDirectory = "Content";
-
         IsMouseVisible = true;
-
         _engine = new GameEngine();
 
-        _engine.OnBugReached += (bug) => 
+        _engine.OnBugReached += (bug) =>
         {
             _mushroomFlashTimer = 0.4;
             _eatSound.Play();
         };
 
-        _engine.OnBugKilled += (bug) => 
+        _engine.OnBugKilled += (bug) =>
         {
             _splashEffects.Add(new SplashEffect { PosX = (float)bug.PositionX, PosY = bug.PositionY, Timer = 0 });
             _squashSound.Play();
@@ -74,7 +68,6 @@ public class Game1 : Game
             _mistypeSound.Play();
         };
 
-        // code that runs when wave is cleared
         _engine.OnWaveCleared += () => {
             _showWaveCleared = true;
             _waveClearedTimer = 3.0;
@@ -83,14 +76,12 @@ public class Game1 : Game
     }
 
     protected override void Initialize()
-    {   
-        // 
+    {
         base.Initialize();
     }
 
     protected override void LoadContent()
     {
-        //
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
         _pixel = new Texture2D(GraphicsDevice, 1, 1);
@@ -123,54 +114,25 @@ public class Game1 : Game
         MediaPlayer.IsRepeating = true;
         MediaPlayer.Play(_backgroundMusic);
 
-        
         _font = Content.Load<SpriteFont>("DefaultFont");
 
-        _mainMenu = new MainMenu(
-            _font,
-            _graphics.PreferredBackBufferWidth,
-            _graphics.PreferredBackBufferHeight
-        );
-
+        _mainMenu        = new MainMenu(_font, _graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
+        _resultScreen    = new ResultScreen(_font, _graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
+        _nameInputScreen = new NameInputScreen(_font, _graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
+        _highScoreScreen = new HighScoreScreen(_font, _graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
     }
 
     protected override void Update(GameTime gameTime)
     {
         var keyboard = Keyboard.GetState();
 
-        if (keyboard.IsKeyDown(Keys.Escape))
+        if (keyboard.IsKeyDown(Keys.Escape) && _currentScreen == Screen.Game)
             Exit();
-
-        if (!_showWaveCleared)
-        {
-            foreach (Keys key in keyboard.GetPressedKeys())
-            {
-                // if the key is down now AND was already down last frame, skip it. Only
-                // Only process it if it's new.
-                if (key >= Keys.A && key <= Keys.Z && !_previousKeyboard.IsKeyDown(key))
-                {
-                    _engine.ProcessKeystroke((char)('a' + (key - Keys.A)));
-                }
-            }
-        }
-        
-        // animation handler
-        // change frame every 0.15 seconds (there are 4 differnet frames for each bug animation)
-        frameTime += gameTime.ElapsedGameTime.TotalSeconds;
-        if (frameTime >= 0.1)
-        {
-            frame = (frame + 1) % 4;
-            frameTime = 0;
-        }
-
-        _engine.Update(gameTime.ElapsedGameTime.TotalSeconds);
-
-        base.Update(gameTime);
 
         if (_currentScreen == Screen.MainMenu)
         {
             _mainMenu?.Update(keyboard, _previousKeyboard);
-            if (_mainMenu?.StartGame == true) 
+            if (_mainMenu?.StartGame == true)
             {
                 _currentScreen = Screen.Game;
                 _engine.StartGame();
@@ -178,23 +140,59 @@ public class Game1 : Game
                 _showWaveCleared = false;
                 _splashEffects.Clear();
             }
+            else if (_mainMenu?.OpenHighScores == true)
+            {
+                _highScoreScreen?.Reset();
+                _currentScreen = Screen.HighScores;
+            }
             _previousKeyboard = keyboard;
+            base.Update(gameTime);
+            return;
+        }
+
+        if (_currentScreen == Screen.HighScores)
+        {
+            _highScoreScreen?.Update(keyboard, _previousKeyboard);
+            if (_highScoreScreen?.ReturnToMenu == true)
+            {
+                _mainMenu?.Reset();
+                _currentScreen = Screen.MainMenu;
+            }
+            _previousKeyboard = keyboard;
+            base.Update(gameTime);
             return;
         }
 
         if (_currentScreen == Screen.Game)
         {
-            
+            if (!_showWaveCleared)
+            {
+                foreach (Keys key in keyboard.GetPressedKeys())
+                {
+                    if (key >= Keys.A && key <= Keys.Z && !_previousKeyboard.IsKeyDown(key))
+                        _engine.ProcessKeystroke((char)('a' + (key - Keys.A)));
+                }
+            }
+
+            frameTime += gameTime.ElapsedGameTime.TotalSeconds;
+            if (frameTime >= 0.1)
+            {
+                frame = (frame + 1) % 4;
+                frameTime = 0;
+            }
+
+            _engine.Update(gameTime.ElapsedGameTime.TotalSeconds);
+
             if (_engine.CurrentState.IsGameOver)
             {
                 _lastResult = _engine.EndGame();
-                _gameOverTimer = 0;
-                _currentScreen = Screen.GameOver;
+                _nameInputScreen?.Reset();
+                _currentScreen = Screen.NameInput;
             }
 
             if (_showWaveCleared)
             {
-                _waveClearedTimer -= gameTime.ElapsedGameTime.TotalSeconds; // timer -= deltaTime
+                _waveClearedTimer -= gameTime.ElapsedGameTime.TotalSeconds;
                 if (_waveClearedTimer <= 0)
                 {
                     _showWaveCleared = false;
@@ -211,27 +209,47 @@ public class Game1 : Game
                 if (e.Timer >= 0.4) _splashEffects.RemoveAt(i);
                 else _splashEffects[i] = e;
             }
+
+            _previousKeyboard = keyboard;
+            base.Update(gameTime);
+            return;
         }
 
-        if (_currentScreen == Screen.GameOver)
+        if (_currentScreen == Screen.NameInput)
         {
-            if (_gameOverTimer > 0)
-                _gameOverTimer -= gameTime.ElapsedGameTime.TotalSeconds;
-            else if (keyboard.IsKeyDown(Keys.Enter) && !_previousKeyboard.IsKeyDown(Keys.Enter))
+            _nameInputScreen?.Update(keyboard, _previousKeyboard);
+            if (_nameInputScreen?.Confirmed == true && _lastResult != null)
+            {
+                _lastResult.PlayerName = _nameInputScreen.PlayerName;
+                _scoreRepository.Save(_lastResult);
+                _resultScreen?.Reset();
+                _currentScreen = Screen.Result;
+            }
+            _previousKeyboard = keyboard;
+            base.Update(gameTime);
+            return;
+        }
+
+        if (_currentScreen == Screen.Result)
+        {
+            _resultScreen?.Update(keyboard, _previousKeyboard);
+            if (_resultScreen?.ReturnToMenu == true)
             {
                 _currentScreen = Screen.MainMenu;
                 _mainMenu?.Reset();
+                _resultScreen.Reset();
             }
             _previousKeyboard = keyboard;
+            base.Update(gameTime);
             return;
         }
 
         _previousKeyboard = keyboard;
+        base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
-        // Clears last frame
         GraphicsDevice.Clear(Color.Black);
 
         if (_currentScreen == Screen.MainMenu)
@@ -246,84 +264,49 @@ public class Game1 : Game
             return;
         }
 
-        if (_currentScreen == Screen.GameOver)
+        if (_currentScreen == Screen.HighScores)
         {
-            int w = GraphicsDevice.Viewport.Width;
-            int h = GraphicsDevice.Viewport.Height;
             _spriteBatch?.Begin();
-            float goBgScale = Math.Max((float)w / _background.Width, (float)h / _background.Height);
-            _spriteBatch?.Draw(_background, new Vector2(w, h) * 0.5f, null, Color.White, 0f, new Vector2(_background.Width, _background.Height) * 0.5f, goBgScale, SpriteEffects.None, 0f);
-            float mScale = 0.44f;
-            _spriteBatch?.Draw(_mushroom4, new Vector2(w * 0.19f, h * 0.60f), null, Color.White, 0f, new Vector2(_mushroom4.Width / 2f, _mushroom4.Height / 2f), mScale, SpriteEffects.None, 0f);
-            string gameOverText = "GAME OVER";
-            Vector2 goSize = _font!.MeasureString(gameOverText);
-            _spriteBatch?.DrawString(_font, gameOverText, new Vector2(w / 2f - goSize.X / 2f, h * 0.2f), Color.Red);
-            if (_gameOverTimer <= 0 && _lastResult != null)
-            {
-                _spriteBatch?.DrawString(_font, $"Score: {_lastResult.FinalScore}", new Vector2(w / 2f - 100, h * 0.38f), Color.White);
-                _spriteBatch?.DrawString(_font, $"Wave reached: {_lastResult.WavesReached}", new Vector2(w / 2f - 100, h * 0.46f), Color.White);
-                _spriteBatch?.DrawString(_font, $"Accuracy: {_lastResult.Accuracy:P0}", new Vector2(w / 2f - 100, h * 0.54f), Color.White);
-                string back = "Press ENTER to return to menu";
-                Vector2 backSize = _font.MeasureString(back);
-                _spriteBatch?.DrawString(_font, back, new Vector2(w / 2f - backSize.X / 2f, h * 0.8f), Color.Gray);
-            }
+            _highScoreScreen?.Draw(_spriteBatch!, _scoreRepository.LoadTop10());
+            _spriteBatch?.End();
+            return;
+        }
+
+        if (_currentScreen == Screen.NameInput)
+        {
+            _spriteBatch?.Begin();
+            _nameInputScreen?.Draw(_spriteBatch!);
+            _spriteBatch?.End();
+            return;
+        }
+
+        if (_currentScreen == Screen.Result)
+        {
+            _spriteBatch?.Begin();
+            _resultScreen?.Draw(_spriteBatch!, _lastResult!, _scoreRepository.LoadTop5());
             _spriteBatch?.End();
             return;
         }
 
         var state = _engine.CurrentState;
-        int width  = GraphicsDevice.Viewport.Width;
+        int width = GraphicsDevice.Viewport.Width;
         int height = GraphicsDevice.Viewport.Height;
 
-
-        // Begin the sprite batch to prepare for rendering
         _spriteBatch?.Begin();
 
-        // Draw the texture at the center of the window
         float bgScale = Math.Max((float)width / _background.Width, (float)height / _background.Height);
-        _spriteBatch?.Draw(
-            _background,                // texture
-            new Vector2(                // position
-                width,
-                height) * 0.5f,
-            null,                       // sourceRectangle
-            Color.White,                // color (tint, .White = no tint)
-            0.0f,                       // rotation
-            new Vector2(                // origin
-                _background.Width,
-                _background.Height) * 0.5f,
-            bgScale,                    // scale
-            SpriteEffects.None,         // effects
-            0.0f                        // layerDepth
-        );
+        _spriteBatch?.Draw(_background, new Vector2(width, height) * 0.5f, null, Color.White, 0.0f,
+            new Vector2(_background.Width, _background.Height) * 0.5f, bgScale, SpriteEffects.None, 0.0f);
 
-        // Draw a mushroom
         float scale = 0.44f;
         Texture2D mushroomTex = state.Lives >= 3 ? _mushroom : state.Lives == 2 ? _mushroom2 : state.Lives == 1 ? _mushroom3 : _mushroom4;
         Color mushroomColor = _mushroomFlashTimer > 0 ? Color.Red : Color.White;
-        _spriteBatch?.Draw(
-            mushroomTex,
-            new Vector2(width * 0.19f, height * 0.52f),
-            null,
-            mushroomColor,
-            0f,
-            new Vector2(mushroomTex.Width / 2f, mushroomTex.Height / 2f),
-            scale,
-            SpriteEffects.None,
-            0f
-        );
+        _spriteBatch?.Draw(mushroomTex, new Vector2(width * 0.19f, height * 0.52f), null, mushroomColor, 0f,
+            new Vector2(mushroomTex.Width / 2f, mushroomTex.Height / 2f), scale, SpriteEffects.None, 0f);
 
-        // HUD
-        _spriteBatch?.DrawString(
-                                 _font,                     // font
-                                 $"Lives: {state.Lives}   Score: {state.Score}   Wave:  {state.Wave}",
-                                  new Vector2(10, 10),      // pos
-                                  Color.White               // color
-                                );
+        _spriteBatch?.DrawString(_font, $"Lives: {state.Lives}   Score: {state.Score}   Wave:  {state.Wave}",
+            new Vector2(10, 10), Color.White);
 
-
-        // bugs
-        // first draw non targeted bug first
         foreach (var bug in state.ActiveBugs)
         {
             if (bug == state.CurrentTarget) continue;
@@ -333,7 +316,7 @@ public class Game1 : Game
 
             Vector2 pos = new Vector2((float)bug.PositionX / 100f * width, bug.PositionY / 100f * height);
             Vector2 typedSize = _font.MeasureString(typed);
-            
+
             Texture2D? bugTexture = bug.BugType switch
             {
                 "spider"    => _spiderSpritesheet,
@@ -345,7 +328,6 @@ public class Game1 : Game
                 _           => _mushroom
             };
 
-            // Texture normalization
             float targetHeight = height * 0.6f;
             float bugScale = targetHeight / bugTexture.Height;
 
@@ -357,33 +339,18 @@ public class Game1 : Game
             else if (bug.BugType == "spider") sourceRect = new Rectangle(frame * 384, 0, 384, 1024);
             else if (bug.BugType == "ant") sourceRect = new Rectangle(frame * 384, 0, 384, 1024);
 
-            // Bug texture
-            _spriteBatch?.Draw(
-                bugTexture,
-                new Vector2(pos.X, pos.Y),
-                sourceRect,
-                Color.White,
-                0f,
+            _spriteBatch?.Draw(bugTexture, new Vector2(pos.X, pos.Y), sourceRect, Color.White, 0f,
                 new Vector2(sourceRect.HasValue ? sourceRect.Value.Width / 2f : bugTexture.Width / 2f, bugTexture.Height / 2f),
-                bugScale,
-                SpriteEffects.None,
-                0f
-            );
+                bugScale, SpriteEffects.None, 0f);
 
-            // Background behind word
             Vector2 wordSize = _font.MeasureString(bug.Word);
             float wordOffsetX = bug.BugType == "fly" ? -125f + 192f * bugScale : bug.BugType == "ant" ? -35f : bug.BugType == "mosquito" ? -40f : -30f;
             float wordStartX = pos.X - wordSize.X / 2f + wordOffsetX;
             _spriteBatch?.Draw(_pixel, new Rectangle((int)wordStartX - 2, (int)pos.Y + 15, (int)wordSize.X + 4, (int)wordSize.Y + 4), Color.Black * 0.5f);
-
-            // Typed letters are gray
             _spriteBatch?.DrawString(_font, typed, new Vector2(wordStartX, pos.Y + 15), Color.Gray);
-
-            // Remaining letters are red
             _spriteBatch?.DrawString(_font, remaining, new Vector2(wordStartX + typedSize.X, pos.Y + 15), Color.Red);
         }
 
-        // then draw targeted bug
         foreach (var bug in state.ActiveBugs)
         {
             if (bug != state.CurrentTarget) continue;
@@ -393,7 +360,7 @@ public class Game1 : Game
 
             Vector2 pos = new Vector2((float)bug.PositionX / 100f * width, bug.PositionY / 100f * height);
             Vector2 typedSize = _font.MeasureString(typed);
-            
+
             Texture2D? bugTexture = bug.BugType switch
             {
                 "spider"    => _spiderSpritesheet,
@@ -405,7 +372,6 @@ public class Game1 : Game
                 _           => _mushroom
             };
 
-            // Texture normalization
             float targetHeight = height * 0.6f;
             float bugScale = targetHeight / bugTexture.Height;
 
@@ -417,81 +383,41 @@ public class Game1 : Game
             else if (bug.BugType == "spider") sourceRect = new Rectangle(frame * 384, 0, 384, 1024);
             else if (bug.BugType == "ant") sourceRect = new Rectangle(frame * 384, 0, 384, 1024);
 
-            // Bug texture
-            _spriteBatch?.Draw(
-                bugTexture,
-                new Vector2(pos.X, pos.Y),
-                sourceRect,
-                Color.White,
-                0f,
+            _spriteBatch?.Draw(bugTexture, new Vector2(pos.X, pos.Y), sourceRect, Color.White, 0f,
                 new Vector2(sourceRect.HasValue ? sourceRect.Value.Width / 2f : bugTexture.Width / 2f, bugTexture.Height / 2f),
-                bugScale,
-                SpriteEffects.None,
-                0f
-            );
+                bugScale, SpriteEffects.None, 0f);
 
-            // Background behind word
             Vector2 wordSize = _font.MeasureString(bug.Word);
             float wordOffsetX = bug.BugType == "fly" ? -125f + 192f * bugScale : bug.BugType == "ant" ? -35f : bug.BugType == "mosquito" ? -40f : -30f;
             float wordStartX = pos.X - wordSize.X / 2f + wordOffsetX;
             _spriteBatch?.Draw(_pixel, new Rectangle((int)wordStartX - 2, (int)pos.Y + 15, (int)wordSize.X + 4, (int)wordSize.Y + 4), Color.Black * 0.5f);
-
-            // Typed letters are gray
             _spriteBatch?.DrawString(_font, typed, new Vector2(wordStartX, pos.Y + 15), Color.Gray);
-
-            // Remaining letters are red
             _spriteBatch?.DrawString(_font, remaining, new Vector2(wordStartX + typedSize.X, pos.Y + 15), Color.Red);
         }
 
-        // splash death effects
         foreach (var splash in _splashEffects)
         {
             int splashFrame = Math.Min((int)(splash.Timer / 0.05), 7);
             Vector2 splashPos = new Vector2(splash.PosX / 100f * width, splash.PosY / 100f * height);
             float splashScale = (height * 0.6f) / _splashSpritesheet.Height;
-            _spriteBatch?.Draw(
-                _splashSpritesheet,
-                splashPos,
-                new Rectangle(splashFrame * 384, 0, 384, 1024),
-                Color.White,
-                0f,
-                new Vector2(270f, _splashSpritesheet.Height / 2f),
-                splashScale,
-                SpriteEffects.None,
-                0f
-            );
+            _spriteBatch?.Draw(_splashSpritesheet, splashPos,
+                new Rectangle(splashFrame * 384, 0, 384, 1024), Color.White, 0f,
+                new Vector2(270f, _splashSpritesheet.Height / 2f), splashScale, SpriteEffects.None, 0f);
         }
 
-        // input
-        string input = "Target: None";
-        if (state.CurrentTarget != null)
-            input = $"Target: {state.CurrentTarget.Word}";
-
+        string input = state.CurrentTarget != null ? $"Target: {state.CurrentTarget.Word}" : "Target: None";
         Vector2 size = _font.MeasureString(input);
-        _spriteBatch?.DrawString(
-                                 _font,
-                                 input,
-                                 new Vector2(0.5f * width - size.X / 2,
-                                             0.9f * height),
-                                 Color.Yellow
-                                );
+        _spriteBatch?.DrawString(_font, input, new Vector2(0.5f * width - size.X / 2, 0.9f * height), Color.Yellow);
 
-
-        // wave
         if (_showWaveCleared)
         {
             string waveText = $"Wave {_engine.CurrentState.Wave - 1} cleared!";
             Vector2 waveTextSize = _font!.MeasureString(waveText);
-            _spriteBatch?.DrawString(
-                _font,
-                waveText,
-                new Vector2(width / 2f - waveTextSize.X / 2f, height / 2f - waveTextSize.Y / 2f),
-                Color.Black
-            );
+            _spriteBatch?.DrawString(_font, waveText,
+                new Vector2(width / 2f - waveTextSize.X / 2f, height / 2f - waveTextSize.Y / 2f), Color.Black);
         }
 
         _spriteBatch?.End();
-
         base.Draw(gameTime);
     }
 }

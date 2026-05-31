@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TyperShroom.Core\TyperShroom.Core.csproj" />
+    <ProjectReference Include="..\TyperShroom.Data\TyperShroom.Data.csproj" />
   </ItemGroup>
 
 <Target Name="BuildContent" BeforeTargets="Build">

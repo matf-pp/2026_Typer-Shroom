@@ -1,4 +1,3 @@
-using System.Numerics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -13,6 +12,7 @@ namespace TyperShroom.UI.Screens
         private int _height;
 
         public bool StartGame { get; private set; } = false;
+        public bool OpenHighScores { get; private set; } = false;
 
         public MainMenu(SpriteFont font, int width, int height)
         {
@@ -24,35 +24,34 @@ namespace TyperShroom.UI.Screens
         public void Reset()
         {
             StartGame = false;
+            OpenHighScores = false;
         }
 
         public void Update(KeyboardState keyboard, KeyboardState previous)
         {
             if (keyboard.IsKeyDown(Keys.Enter) && !previous.IsKeyDown(Keys.Enter))
                 StartGame = true;
+
+            if (keyboard.IsKeyDown(Keys.Space) && !previous.IsKeyDown(Keys.Space))
+                OpenHighScores = true;
         }
 
         public void Draw(SpriteBatch spriteBatch)
         {
             string title = "TYPER SHROOM";
             Vector2 titleSize = _font.MeasureString(title);
-            spriteBatch.DrawString(
-                _font,
-                title,
-                new Vector2(_width / 2f - titleSize.X / 2, _height * 0.3f),
-                Color.Green
-            );
+            spriteBatch.DrawString(_font, title,
+                new Vector2(_width / 2f - titleSize.X / 2, _height * 0.3f), Color.Green);
 
             string start = "Press ENTER to start";
             Vector2 startSize = _font.MeasureString(start);
-            spriteBatch.DrawString(
-                _font,
-                start,
-                new Vector2(_width / 2f - startSize.X / 2, _height * 0.5f),
-                Color.White
-            );
+            spriteBatch.DrawString(_font, start,
+                new Vector2(_width / 2f - startSize.X / 2, _height * 0.5f), Color.White);
+
+            string scores = "Press SPACE for High Scores";
+            Vector2 scoresSize = _font.MeasureString(scores);
+            spriteBatch.DrawString(_font, scores,
+                new Vector2(_width / 2f - scoresSize.X / 2, _height * 0.6f), Color.Yellow);
         }
-
-
     }
 }
