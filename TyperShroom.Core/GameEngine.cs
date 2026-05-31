@@ -100,10 +100,9 @@ namespace TyperShroom.Core {
                 }    
 
                 if (!targetFlag) {
-                    _totalKeystrokes++; 
+                    _totalKeystrokes++;
                     _state.Score -= 10;
                     OnKeyNotMatched?.Invoke();
-                    OnBugMistyped?.Invoke(_state.CurrentTarget);
                 }
             }
             // if a target is already locked -> directly update remainingWord and states

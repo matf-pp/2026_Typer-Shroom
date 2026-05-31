@@ -8,15 +8,17 @@ namespace TyperShroom.UI.Screens
     public class MainMenu
     {
         private SpriteFont _font;
+        private Texture2D _title;
         private int _width;
         private int _height;
 
         public bool StartGame { get; private set; } = false;
         public bool OpenHighScores { get; private set; } = false;
 
-        public MainMenu(SpriteFont font, int width, int height)
+        public MainMenu(SpriteFont font, Texture2D title, int width, int height)
         {
             _font = font;
+            _title = title;
             _width = width;
             _height = height;
         }
@@ -38,10 +40,11 @@ namespace TyperShroom.UI.Screens
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            string title = "TYPER SHROOM";
-            Vector2 titleSize = _font.MeasureString(title);
-            spriteBatch.DrawString(_font, title,
-                new Vector2(_width / 2f - titleSize.X / 2, _height * 0.3f), Color.Green);
+            float titleScale = (float)_width * 0.5f / _title.Width;
+            spriteBatch.Draw(_title,
+                new Vector2(_width / 2f + 20f, _height * 0.32f), null, Color.White, 0f,
+                new Vector2(_title.Width / 2f, _title.Height / 2f),
+                titleScale, SpriteEffects.None, 0f);
 
             string start = "Press ENTER to start";
             Vector2 startSize = _font.MeasureString(start);
@@ -52,6 +55,11 @@ namespace TyperShroom.UI.Screens
             Vector2 scoresSize = _font.MeasureString(scores);
             spriteBatch.DrawString(_font, scores,
                 new Vector2(_width / 2f - scoresSize.X / 2, _height * 0.6f), Color.Yellow);
+
+            string exit = "Press ESC to exit";
+            Vector2 exitSize = _font.MeasureString(exit);
+            spriteBatch.DrawString(_font, exit,
+                new Vector2(_width / 2f - exitSize.X / 2, _height * 0.7f), Color.Yellow);
         }
     }
 }

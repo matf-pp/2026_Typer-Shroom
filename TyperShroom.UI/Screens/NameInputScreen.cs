@@ -30,7 +30,7 @@ namespace TyperShroom.UI.Screens
 
         public void Update(KeyboardState keyboard, KeyboardState previous)
         {
-            // Enter potvrdjuje ime (min 1 karakter)
+            // Enter confirms name (min 1 character)
             if (keyboard.IsKeyDown(Keys.Enter) && !previous.IsKeyDown(Keys.Enter))
             {
                 if (_name.Length > 0)
@@ -38,7 +38,7 @@ namespace TyperShroom.UI.Screens
                 return;
             }
 
-            // Backspace brise poslednji karakter
+            // Backspace deletes last character
             if (keyboard.IsKeyDown(Keys.Back) && !previous.IsKeyDown(Keys.Back))
             {
                 if (_name.Length > 0)
@@ -46,7 +46,7 @@ namespace TyperShroom.UI.Screens
                 return;
             }
 
-            // Slova A-Z (max 12 karaktera)
+            // Letters A-Z (max 12 characters)
             if (_name.Length < 12)
             {
                 foreach (Keys key in keyboard.GetPressedKeys())
@@ -71,7 +71,7 @@ namespace TyperShroom.UI.Screens
             spriteBatch.DrawString(_font, prompt,
                 new Vector2(_width / 2f - promptSize.X / 2, _height * 0.42f), Color.White);
 
-            // Okvir za unos
+            // Name input display
             string display = _name + "_";
             Vector2 nameSize = _font.MeasureString(display);
             spriteBatch.DrawString(_font, display,

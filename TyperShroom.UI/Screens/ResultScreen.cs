@@ -37,31 +37,31 @@ namespace TyperShroom.UI.Screens
         {
             int centerX = _width / 2;
 
-            // Naslov
+            // Title
             string title = "GAME OVER";
             Vector2 titleSize = _font.MeasureString(title);
             spriteBatch.DrawString(_font, title,
                 new Vector2(centerX - titleSize.X / 2, _height * 0.05f), Color.Red);
 
-            // Rezultati trenutne igre
+            // Current game result
             string yourScore = $"Your score:  {result.FinalScore} pts   |   Wave: {result.WavesReached}   |   Accuracy: {result.Accuracy:P0}";
             Vector2 yourScoreSize = _font.MeasureString(yourScore);
             spriteBatch.DrawString(_font, yourScore,
                 new Vector2(centerX - yourScoreSize.X / 2, _height * 0.18f), Color.LightBlue);
 
-            // Linija razdvajanja
+            // Separator line
             string line = "----------------------------------------";
             Vector2 lineSize = _font.MeasureString(line);
             spriteBatch.DrawString(_font, line,
                 new Vector2(centerX - lineSize.X / 2, _height * 0.27f), Color.DarkGray);
 
-            // TOP 5 naslov
+            // Top 5 title
             string topTitle = "TOP 5 PLAYERS";
             Vector2 topTitleSize = _font.MeasureString(topTitle);
             spriteBatch.DrawString(_font, topTitle,
                 new Vector2(centerX - topTitleSize.X / 2, _height * 0.33f), Color.Yellow);
 
-            // Zaglavlje kolona
+            // Column headers
             float colName = centerX - 280f;
             float colScore = centerX - 80f;
             float colWave = centerX + 60f;
@@ -74,7 +74,7 @@ namespace TyperShroom.UI.Screens
             spriteBatch.DrawString(_font, "WAVE", new Vector2(colWave, startY - 28), Color.Gray);
             spriteBatch.DrawString(_font, "ACCURACY", new Vector2(colAcc, startY - 28), Color.Gray);
 
-            // Top 5 redovi
+            // Top 5 rows
             for (int i = 0; i < top5.Count; i++)
             {
                 var r = top5[i];
@@ -91,7 +91,7 @@ namespace TyperShroom.UI.Screens
                 spriteBatch.DrawString(_font, $"{r.Accuracy:P0}", new Vector2(colAcc, y), rowColor);
             }
 
-            // Povratak
+            // Back prompt
             string back = "Press ENTER to return to menu";
             Vector2 backSize = _font.MeasureString(back);
             spriteBatch.DrawString(_font, back,

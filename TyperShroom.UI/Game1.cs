@@ -1,4 +1,3 @@
-using System.Numerics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -15,10 +14,11 @@ public class Game1 : Game
     private SpriteBatch? _spriteBatch;
     private IGameEngine _engine;
 
-    private Texture2D _background, _mainMenuBackground, _mushroom, _spider, _spiderSpritesheet, _ant, _antSpritesheet, _worm, _wormSpritesheet, _mosquito, _mosquitoSpritesheet, _fly, _flySpritesheet, _butterfly, _butterflySpritesheet, _splashSpritesheet, _pixel;
-    private Texture2D _mushroom2, _mushroom3, _mushroom4;
-    private SoundEffect _squashSound, _eatSound, _mistypeSound;
-    private Song _backgroundMusic;
+    // put null! to remove warning, all fields are used and assigned later
+    private Texture2D _background = null!, _mainMenuBackground = null!, _mushroom = null!, _spiderSpritesheet = null!, _antSpritesheet = null!, _wormSpritesheet = null!, _mosquitoSpritesheet = null!, _flySpritesheet = null!, _butterflySpritesheet = null!, _splashSpritesheet = null!, _pixel = null!, _heart = null!, _title = null!;
+    private Texture2D _mushroom2 = null!, _mushroom3 = null!, _mushroom4 = null!;
+    private SoundEffect _squashSound = null!, _eatSound = null!, _mistypeSound = null!;
+    private Song _backgroundMusic = null!;
     private double _mushroomFlashTimer = 0;
     private int frame = 0;
     private double frameTime = 0;
@@ -27,7 +27,7 @@ public class Game1 : Game
     private List<SplashEffect> _splashEffects = new();
 
     private MainMenu? _mainMenu;
-    private SpriteFont? _font;
+    private SpriteFont _font = null!;
 
     private enum Screen { MainMenu, Game, NameInput, Result, HighScores }
 
@@ -63,21 +63,14 @@ public class Game1 : Game
             _squashSound.Play();
         };
 
-        _engine.OnBugMistyped += (bug) =>
-        {
-            _mistypeSound.Play();
-        };
+        _engine.OnBugMistyped += (bug) => _mistypeSound.Play();
+        _engine.OnKeyNotMatched += () => _mistypeSound.Play();
 
         _engine.OnWaveCleared += () => {
             _showWaveCleared = true;
             _waveClearedTimer = 3.0;
             _engine.CurrentState.IsWaveClearing = true;
         };
-    }
-
-    protected override void Initialize()
-    {
-        base.Initialize();
     }
 
     protected override void LoadContent()
@@ -93,17 +86,13 @@ public class Game1 : Game
         _mushroom2            = Content.Load<Texture2D>("images/mushroom_2");
         _mushroom3            = Content.Load<Texture2D>("images/mushroom_3");
         _mushroom4            = Content.Load<Texture2D>("images/mushroom-4");
-        _spider               = Content.Load<Texture2D>("images/spider");
+        _heart                = Content.Load<Texture2D>("images/heart");
+        _title                = Content.Load<Texture2D>("images/title");
         _spiderSpritesheet    = Content.Load<Texture2D>("images/spider-spritesheet");
-        _butterfly            = Content.Load<Texture2D>("images/butterfly");
         _butterflySpritesheet = Content.Load<Texture2D>("images/butterfly-spritesheet");
-        _ant                  = Content.Load<Texture2D>("images/ant");
         _antSpritesheet       = Content.Load<Texture2D>("images/ant-spritesheet");
-        _fly                  = Content.Load<Texture2D>("images/fly");
         _flySpritesheet       = Content.Load<Texture2D>("images/fly-spritesheet");
-        _mosquito             = Content.Load<Texture2D>("images/mosquito");
         _mosquitoSpritesheet  = Content.Load<Texture2D>("images/mosquito-spritesheet");
-        _worm                 = Content.Load<Texture2D>("images/worm");
         _wormSpritesheet      = Content.Load<Texture2D>("images/worm-spritesheet");
         _splashSpritesheet    = Content.Load<Texture2D>("images/splash-spritesheet");
         _squashSound          = Content.Load<SoundEffect>("sounds/squash");
@@ -116,7 +105,7 @@ public class Game1 : Game
 
         _font = Content.Load<SpriteFont>("DefaultFont");
 
-        _mainMenu        = new MainMenu(_font, _graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
+        _mainMenu        = new MainMenu(_font, _title, _graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
         _resultScreen    = new ResultScreen(_font, _graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
         _nameInputScreen = new NameInputScreen(_font, _graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
         _highScoreScreen = new HighScoreScreen(_font, _graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
@@ -126,7 +115,7 @@ public class Game1 : Game
     {
         var keyboard = Keyboard.GetState();
 
-        if (keyboard.IsKeyDown(Keys.Escape) && _currentScreen == Screen.Game)
+        if (keyboard.IsKeyDown(Keys.Escape) && (_currentScreen == Screen.Game || _currentScreen == Screen.MainMenu))
             Exit();
 
         if (_currentScreen == Screen.MainMenu)
@@ -267,7 +256,7 @@ public class Game1 : Game
         if (_currentScreen == Screen.HighScores)
         {
             _spriteBatch?.Begin();
-            _highScoreScreen?.Draw(_spriteBatch!, _scoreRepository.LoadTop10());
+            _highScoreScreen?.Draw(_spriteBatch!, _scoreRepository.LoadTop10(), _mainMenuBackground);
             _spriteBatch?.End();
             return;
         }
@@ -304,8 +293,19 @@ public class Game1 : Game
         _spriteBatch?.Draw(mushroomTex, new Vector2(width * 0.19f, height * 0.52f), null, mushroomColor, 0f,
             new Vector2(mushroomTex.Width / 2f, mushroomTex.Height / 2f), scale, SpriteEffects.None, 0f);
 
-        _spriteBatch?.DrawString(_font, $"Lives: {state.Lives}   Score: {state.Score}   Wave:  {state.Wave}",
-            new Vector2(10, 10), Color.White);
+        string livesLabel = "Lives: ";
+        Vector2 livesLabelSize = _font.MeasureString(livesLabel);
+        _spriteBatch?.DrawString(_font, livesLabel, new Vector2(10, 10), Color.White);
+
+        float heartSize = 100f;
+        float heartScale = heartSize / _heart.Height;
+        float heartY = 10 + livesLabelSize.Y / 2f - heartSize / 2f + 5f;
+        for (int i = 0; i < state.Lives; i++)
+            _spriteBatch?.Draw(_heart, new Vector2(10 + livesLabelSize.X - 35 + i * (heartSize - 40), heartY), null, Color.White, 0f,
+                Vector2.Zero, heartScale, SpriteEffects.None, 0f);
+
+        _spriteBatch?.DrawString(_font, $"Score: {state.Score}   Wave: {state.Wave}",
+            new Vector2(10, 10 + livesLabelSize.Y + 4), Color.White);
 
         foreach (var bug in state.ActiveBugs)
         {
@@ -405,17 +405,19 @@ public class Game1 : Game
                 new Vector2(270f, _splashSpritesheet.Height / 2f), splashScale, SpriteEffects.None, 0f);
         }
 
-        string input = state.CurrentTarget != null ? $"Target: {state.CurrentTarget.Word}" : "Target: None";
-        Vector2 size = _font.MeasureString(input);
-        _spriteBatch?.DrawString(_font, input, new Vector2(0.5f * width - size.X / 2, 0.9f * height), Color.Yellow);
-
         if (_showWaveCleared)
         {
             string waveText = $"Wave {_engine.CurrentState.Wave - 1} cleared!";
-            Vector2 waveTextSize = _font!.MeasureString(waveText);
+            Vector2 waveTextSize = _font.MeasureString(waveText);
             _spriteBatch?.DrawString(_font, waveText,
-                new Vector2(width / 2f - waveTextSize.X / 2f, height / 2f - waveTextSize.Y / 2f), Color.Black);
+                new Vector2(width / 2f, height / 2f),
+                new Color(255, 210, 80), 0f,
+                new Vector2(waveTextSize.X / 2f, waveTextSize.Y / 2f),
+                1.8f, SpriteEffects.None, 0f);
         }
+
+        _spriteBatch?.DrawString(_font, "Press ESC to quit",
+            new Vector2(10, height - _font.LineSpacing - 10), Color.Gray * 0.7f);
 
         _spriteBatch?.End();
         base.Draw(gameTime);
