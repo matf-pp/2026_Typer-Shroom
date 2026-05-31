@@ -48,3 +48,9 @@ chmod +x TyperShroom.UI
 ### Windows
 Run `TyperShroom.UI.exe` from the publish folder.
 
+## Authors
+
+- Dimitrije Vujko
+- Mihajlo Tasić
+- Sreten Milekić
+
