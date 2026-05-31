@@ -26,6 +26,7 @@ namespace TyperShroom.Core {
             _state.ActiveBugs = new List<Bug>();
             _state.CurrentTarget = null;
             _state.IsGameOver = false;
+            _state.IsWaveClearing = false;
             _bugsKilledThisWave = 0;
             _bugsSpawnedThisWave = 0;
             _bugsPerWave = 8;
@@ -64,7 +65,7 @@ namespace TyperShroom.Core {
 
             Bug.BugType = bugTypes[groundType][bugType];
 
-            Bug.PositionX = 100;
+            Bug.PositionX = 108;
             Bug.PositionY = groundType == 0 ? _random.Next(65, 90) : _random.Next(10, 40); 
             Bug.IsDead = false;
             Bug.ReachedMushroom = false;
@@ -153,8 +154,7 @@ namespace TyperShroom.Core {
                 foreach (Bug bug in _state.ActiveBugs) {
                     bug.PositionX -= bug.Speed * deltaTime;
 
-                    if (bug.PositionX <= 15) {
-                        Console.WriteLine($"Bug reached mushroom! PositionX={bug.PositionX}, Lives={_state.Lives}");
+                    if (bug.PositionX <= 25) {
                         _state.Lives -= 1;
                         OnBugReached?.Invoke(bug);
                         toRemove.Add(bug);
@@ -180,12 +180,6 @@ namespace TyperShroom.Core {
                 OnGameOver?.Invoke();
                 _state.IsGameOver = true;
             }
-
-            // for every killed bug -> spawn new one
-            // foreach(Bug bug in toRemove) {
-            //     if (bug.IsDead)
-            //         SpawnBug();
-            // }
         }
 
         public GameResult EndGame() => new GameResult {
