@@ -1,5 +1,7 @@
 # Typer Shroom
 
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/21fb61256e9c41619d1ae0b3078ab8ee)](https://app.codacy.com/gh/matf-pp/2026_Typer-Shroom/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+
 A typing game built with C# and MonoGame where bugs crawl toward your mushroom, and you must type their words before they reach it.
 
 ## Gameplay
