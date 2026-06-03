@@ -126,6 +126,7 @@ public class Game1 : Game
             case Screen.Game:       UpdateGame(gameTime, keyboard); break;
             case Screen.NameInput:  UpdateNameInput(keyboard); break;
             case Screen.Result:     UpdateResult(keyboard); break;
+            default: break;    
         }
 
         _previousKeyboard = keyboard;
@@ -162,41 +163,57 @@ public class Game1 : Game
 
     private void UpdateGame(GameTime gameTime, KeyboardState keyboard)
     {
-        if (!_showWaveCleared)
-        {
-            foreach (Keys key in keyboard.GetPressedKeys())
-            {
-                if (key >= Keys.A && key <= Keys.Z && !_previousKeyboard.IsKeyDown(key))
-                    _engine.ProcessKeystroke((char)('a' + (key - Keys.A)));
-            }
-        }
+        ProcessKeyInput(keyboard);
+        UpdateAnimation(gameTime);
+        _engine.Update(gameTime.ElapsedGameTime.TotalSeconds);
+        CheckGameOver();
+        UpdateWaveCleared(gameTime);
+        UpdateTimers(gameTime);
+    }
 
+    private void ProcessKeyInput(KeyboardState keyboard)
+    {
+        if (_showWaveCleared) return;
+        foreach (Keys key in keyboard.GetPressedKeys())
+        {
+            if (key >= Keys.A && key <= Keys.Z && !_previousKeyboard.IsKeyDown(key))
+                _engine.ProcessKeystroke((char)('a' + (key - Keys.A)));
+        }
+    }
+
+    private void UpdateAnimation(GameTime gameTime)
+    {
         frameTime += gameTime.ElapsedGameTime.TotalSeconds;
         if (frameTime >= 0.1)
         {
             frame = (frame + 1) % 4;
             frameTime = 0;
         }
+    }
 
-        _engine.Update(gameTime.ElapsedGameTime.TotalSeconds);
-
+    private void CheckGameOver()
+    {
         if (_engine.CurrentState.IsGameOver)
         {
             _lastResult = _engine.EndGame();
             _nameInputScreen?.Reset();
             _currentScreen = Screen.NameInput;
         }
+    }
 
-        if (_showWaveCleared)
+    private void UpdateWaveCleared(GameTime gameTime)
+    {
+        if (!_showWaveCleared) return;
+        _waveClearedTimer -= gameTime.ElapsedGameTime.TotalSeconds;
+        if (_waveClearedTimer <= 0)
         {
-            _waveClearedTimer -= gameTime.ElapsedGameTime.TotalSeconds;
-            if (_waveClearedTimer <= 0)
-            {
-                _showWaveCleared = false;
-                _engine.CurrentState.IsWaveClearing = false;
-            }
+            _showWaveCleared = false;
+            _engine.CurrentState.IsWaveClearing = false;
         }
+    }
 
+    private void UpdateTimers(GameTime gameTime)
+    {
         double dt = gameTime.ElapsedGameTime.TotalSeconds;
         if (_mushroomFlashTimer > 0) _mushroomFlashTimer -= dt;
         for (int i = _splashEffects.Count - 1; i >= 0; i--)
