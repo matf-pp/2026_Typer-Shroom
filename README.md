@@ -10,6 +10,14 @@ Waves of bugs march across the screen toward a mushroom on the right. Each bug c
 
 Each wave adds more bugs and increases spawn/movement speed, so later waves require fast and accurate typing.
 
+## Screenshots
+
+![Main Menu](screenshots/01_main_menu.png)
+![Gameplay 1](screenshots/02_wave1_letters.png)
+![Gameplay 2](screenshots/03_1_heart_left.png)
+![Game Over and High Scores](screenshots/04_game_over_results.png)
+
+
 ### Controls
 
 | Key | Action |
