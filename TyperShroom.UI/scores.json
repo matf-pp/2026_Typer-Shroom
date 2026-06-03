@@ -1,0 +1,93 @@
+[
+  {
+    "PlayerName": "FUNGI",
+    "FinalScore": 1345,
+    "WavesReached": 6,
+    "BugsKilled": 48,
+    "LivesLost": 3,
+    "TotalKeystrokes": 203,
+    "CorrectKeystrokes": 196,
+    "Accuracy": 0.9655172413793104,
+    "WPM": 13,
+    "GameDuration": "00:02:48.6219944",
+    "PlayedAt": "2026-06-03T16:12:01.3559545+02:00"
+  },
+  {
+    "PlayerName": "Ana",
+    "FinalScore": 500,
+    "WavesReached": 5,
+    "BugsKilled": 0,
+    "LivesLost": 0,
+    "TotalKeystrokes": 0,
+    "CorrectKeystrokes": 0,
+    "Accuracy": 0.95,
+    "WPM": 0,
+    "GameDuration": "00:00:00",
+    "PlayedAt": "2026-06-03T16:10:03.1588763+02:00"
+  },
+  {
+    "PlayerName": "Marko",
+    "FinalScore": 420,
+    "WavesReached": 4,
+    "BugsKilled": 0,
+    "LivesLost": 0,
+    "TotalKeystrokes": 0,
+    "CorrectKeystrokes": 0,
+    "Accuracy": 0.88,
+    "WPM": 0,
+    "GameDuration": "00:00:00",
+    "PlayedAt": "2026-06-03T16:10:03.1588819+02:00"
+  },
+  {
+    "PlayerName": "Jovana",
+    "FinalScore": 380,
+    "WavesReached": 3,
+    "BugsKilled": 0,
+    "LivesLost": 0,
+    "TotalKeystrokes": 0,
+    "CorrectKeystrokes": 0,
+    "Accuracy": 0.82,
+    "WPM": 0,
+    "GameDuration": "00:00:00",
+    "PlayedAt": "2026-06-03T16:10:03.1588826+02:00"
+  },
+  {
+    "PlayerName": "Nikola",
+    "FinalScore": 300,
+    "WavesReached": 3,
+    "BugsKilled": 0,
+    "LivesLost": 0,
+    "TotalKeystrokes": 0,
+    "CorrectKeystrokes": 0,
+    "Accuracy": 0.75,
+    "WPM": 0,
+    "GameDuration": "00:00:00",
+    "PlayedAt": "2026-06-03T16:10:03.1588832+02:00"
+  },
+  {
+    "PlayerName": "Maja",
+    "FinalScore": 210,
+    "WavesReached": 2,
+    "BugsKilled": 0,
+    "LivesLost": 0,
+    "TotalKeystrokes": 0,
+    "CorrectKeystrokes": 0,
+    "Accuracy": 0.7,
+    "WPM": 0,
+    "GameDuration": "00:00:00",
+    "PlayedAt": "2026-06-03T16:10:03.1588838+02:00"
+  },
+  {
+    "PlayerName": "ZELE",
+    "FinalScore": 75,
+    "WavesReached": 2,
+    "BugsKilled": 5,
+    "LivesLost": 3,
+    "TotalKeystrokes": 22,
+    "CorrectKeystrokes": 17,
+    "Accuracy": 0.7727272727272727,
+    "WPM": 4,
+    "GameDuration": "00:00:41.1831720",
+    "PlayedAt": "2026-06-03T16:09:12.492+02:00"
+  }
+]
