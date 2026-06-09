@@ -154,6 +154,7 @@ namespace TyperShroom.Core {
                 foreach (Bug bug in _state.ActiveBugs) {
                     bug.PositionX -= bug.Speed * deltaTime;
 
+                    // if bug reached the mushroom
                     if (bug.PositionX <= 30) {
                         _state.Lives -= 1;
                         OnBugReached?.Invoke(bug);
