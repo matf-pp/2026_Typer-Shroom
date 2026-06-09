@@ -115,126 +115,137 @@ public class Game1 : Game
     {
         var keyboard = Keyboard.GetState();
 
-        if (keyboard.IsKeyDown(Keys.Escape) && (_currentScreen == Screen.Game || _currentScreen == Screen.MainMenu))
+        if (keyboard.IsKeyDown(Keys.Escape) &&
+            (_currentScreen == Screen.Game || _currentScreen == Screen.MainMenu))
             Exit();
 
-        if (_currentScreen == Screen.MainMenu)
+        switch (_currentScreen)
         {
-            _mainMenu?.Update(keyboard, _previousKeyboard);
-            if (_mainMenu?.StartGame == true)
-            {
-                _currentScreen = Screen.Game;
-                _engine.StartGame();
-                _mushroomFlashTimer = 0;
-                _showWaveCleared = false;
-                _splashEffects.Clear();
-            }
-            else if (_mainMenu?.OpenHighScores == true)
-            {
-                _highScoreScreen?.Reset();
-                _currentScreen = Screen.HighScores;
-            }
-            _previousKeyboard = keyboard;
-            base.Update(gameTime);
-            return;
-        }
-
-        if (_currentScreen == Screen.HighScores)
-        {
-            _highScoreScreen?.Update(keyboard, _previousKeyboard);
-            if (_highScoreScreen?.ReturnToMenu == true)
-            {
-                _mainMenu?.Reset();
-                _currentScreen = Screen.MainMenu;
-            }
-            _previousKeyboard = keyboard;
-            base.Update(gameTime);
-            return;
-        }
-
-        if (_currentScreen == Screen.Game)
-        {
-            if (!_showWaveCleared)
-            {
-                foreach (Keys key in keyboard.GetPressedKeys())
-                {
-                    if (key >= Keys.A && key <= Keys.Z && !_previousKeyboard.IsKeyDown(key))
-                        _engine.ProcessKeystroke((char)('a' + (key - Keys.A)));
-                }
-            }
-
-            frameTime += gameTime.ElapsedGameTime.TotalSeconds;
-            if (frameTime >= 0.1)
-            {
-                frame = (frame + 1) % 4;
-                frameTime = 0;
-            }
-
-            _engine.Update(gameTime.ElapsedGameTime.TotalSeconds);
-
-            if (_engine.CurrentState.IsGameOver)
-            {
-                _lastResult = _engine.EndGame();
-                _nameInputScreen?.Reset();
-                _currentScreen = Screen.NameInput;
-            }
-
-            if (_showWaveCleared)
-            {
-                _waveClearedTimer -= gameTime.ElapsedGameTime.TotalSeconds;
-                if (_waveClearedTimer <= 0)
-                {
-                    _showWaveCleared = false;
-                    _engine.CurrentState.IsWaveClearing = false;
-                }
-            }
-
-            double dt = gameTime.ElapsedGameTime.TotalSeconds;
-            if (_mushroomFlashTimer > 0) _mushroomFlashTimer -= dt;
-            for (int i = _splashEffects.Count - 1; i >= 0; i--)
-            {
-                var e = _splashEffects[i];
-                e.Timer += dt;
-                if (e.Timer >= 0.4) _splashEffects.RemoveAt(i);
-                else _splashEffects[i] = e;
-            }
-
-            _previousKeyboard = keyboard;
-            base.Update(gameTime);
-            return;
-        }
-
-        if (_currentScreen == Screen.NameInput)
-        {
-            _nameInputScreen?.Update(keyboard, _previousKeyboard);
-            if (_nameInputScreen?.Confirmed == true && _lastResult != null)
-            {
-                _lastResult.PlayerName = _nameInputScreen.PlayerName;
-                _scoreRepository.Save(_lastResult);
-                _resultScreen?.Reset();
-                _currentScreen = Screen.Result;
-            }
-            _previousKeyboard = keyboard;
-            base.Update(gameTime);
-            return;
-        }
-
-        if (_currentScreen == Screen.Result)
-        {
-            _resultScreen?.Update(keyboard, _previousKeyboard);
-            if (_resultScreen?.ReturnToMenu == true)
-            {
-                _currentScreen = Screen.MainMenu;
-                _mainMenu?.Reset();
-                _resultScreen.Reset();
-            }
-            _previousKeyboard = keyboard;
-            base.Update(gameTime);
-            return;
+            case Screen.MainMenu:   UpdateMainMenu(keyboard); break;
+            case Screen.HighScores: UpdateHighScores(keyboard); break;
+            case Screen.Game:       UpdateGame(gameTime, keyboard); break;
+            case Screen.NameInput:  UpdateNameInput(keyboard); break;
+            case Screen.Result:     UpdateResult(keyboard); break;
+            default: break;    
         }
 
         _previousKeyboard = keyboard;
         base.Update(gameTime);
+    }
+
+    private void UpdateMainMenu(KeyboardState keyboard)
+    {
+        _mainMenu?.Update(keyboard, _previousKeyboard);
+        if (_mainMenu?.StartGame == true)
+        {
+            _currentScreen = Screen.Game;
+            _engine.StartGame();
+            _mushroomFlashTimer = 0;
+            _showWaveCleared = false;
+            _splashEffects.Clear();
+        }
+        else if (_mainMenu?.OpenHighScores == true)
+        {
+            _highScoreScreen?.Reset();
+            _currentScreen = Screen.HighScores;
+        }
+    }
+
+    private void UpdateHighScores(KeyboardState keyboard)
+    {
+        _highScoreScreen?.Update(keyboard, _previousKeyboard);
+        if (_highScoreScreen?.ReturnToMenu == true)
+        {
+            _mainMenu?.Reset();
+            _currentScreen = Screen.MainMenu;
+        }
+    }
+
+    private void UpdateGame(GameTime gameTime, KeyboardState keyboard)
+    {
+        ProcessKeyInput(keyboard);
+        UpdateAnimation(gameTime);
+        _engine.Update(gameTime.ElapsedGameTime.TotalSeconds);
+        CheckGameOver();
+        UpdateWaveCleared(gameTime);
+        UpdateTimers(gameTime);
+    }
+
+    private void ProcessKeyInput(KeyboardState keyboard)
+    {
+        if (_showWaveCleared) return;
+        foreach (Keys key in keyboard.GetPressedKeys())
+        {
+            if (key >= Keys.A && key <= Keys.Z && !_previousKeyboard.IsKeyDown(key))
+                _engine.ProcessKeystroke((char)('a' + (key - Keys.A)));
+        }
+    }
+
+    private void UpdateAnimation(GameTime gameTime)
+    {
+        frameTime += gameTime.ElapsedGameTime.TotalSeconds;
+        if (frameTime >= 0.1)
+        {
+            frame = (frame + 1) % 4;
+            frameTime = 0;
+        }
+    }
+
+    private void CheckGameOver()
+    {
+        if (_engine.CurrentState.IsGameOver)
+        {
+            _lastResult = _engine.EndGame();
+            _nameInputScreen?.Reset();
+            _currentScreen = Screen.NameInput;
+        }
+    }
+
+    private void UpdateWaveCleared(GameTime gameTime)
+    {
+        if (!_showWaveCleared) return;
+        _waveClearedTimer -= gameTime.ElapsedGameTime.TotalSeconds;
+        if (_waveClearedTimer <= 0)
+        {
+            _showWaveCleared = false;
+            _engine.CurrentState.IsWaveClearing = false;
+        }
+    }
+
+    private void UpdateTimers(GameTime gameTime)
+    {
+        double dt = gameTime.ElapsedGameTime.TotalSeconds;
+        if (_mushroomFlashTimer > 0) _mushroomFlashTimer -= dt;
+        for (int i = _splashEffects.Count - 1; i >= 0; i--)
+        {
+            var e = _splashEffects[i];
+            e.Timer += dt;
+            if (e.Timer >= 0.4) _splashEffects.RemoveAt(i);
+            else _splashEffects[i] = e;
+        }
+    }
+
+    private void UpdateNameInput(KeyboardState keyboard)
+    {
+        _nameInputScreen?.Update(keyboard, _previousKeyboard);
+        if (_nameInputScreen?.Confirmed == true && _lastResult != null)
+        {
+            _lastResult.PlayerName = _nameInputScreen.PlayerName;
+            _scoreRepository.Save(_lastResult);
+            _resultScreen?.Reset();
+            _currentScreen = Screen.Result;
+        }
+    }
+
+    private void UpdateResult(KeyboardState keyboard)
+    {
+        _resultScreen?.Update(keyboard, _previousKeyboard);
+        if (_resultScreen?.ReturnToMenu == true)
+        {
+            _currentScreen = Screen.MainMenu;
+            _mainMenu?.Reset();
+            _resultScreen.Reset();
+        }
     }
 
     protected override void Draw(GameTime gameTime)
